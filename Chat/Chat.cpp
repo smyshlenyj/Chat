@@ -3,8 +3,6 @@
 #include <list>
 #include <sstream>
 
-
-
 struct Message
 {
 private:
