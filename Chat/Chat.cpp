@@ -42,17 +42,16 @@ struct Chat
         std::ifstream readFromDB;
         readFromDB.open("messages.mdf", std::ios::in);
         std::string array[5];
-        int i = 0; // iterator for while
+
         while (!readFromDB.eof()) 
         {
-            i = 0; // iterator for while
             std::string msg;
             std::getline(readFromDB, msg);
 
             std::istringstream ss(msg);
             std::string token;
-
-            while (std::getline(ss, token, '$')) 
+            int i = 0; // iterator for while
+            while (std::getline(ss, token, '$') && i < 5) 
             {
                 array[i] = token;
                 ++i;
@@ -60,6 +59,8 @@ struct Chat
             
             if ((std::stoi(array[2]) == _id1 && std::stoi(array[3]) == _id2) || (std::stoi(array[2]) == _id2 && std::stoi(array[3]) == _id1))
                 buffer.push_back("From: " + array[2] + " To: " + array[3] + " Message: " + array[4]);
+            for (int i = 0; i < 5; ++i) // need to reset array and please remove magic number
+                array[i] = "0";
         }
     }
 
@@ -68,16 +69,15 @@ struct Chat
         std::ifstream readFromDB;
         readFromDB.open("messages.mdf", std::ios::in);
         std::string array[5];
-        int i = 0; // iterator for while
+
         while (!readFromDB.eof())
         {
-            i = 0; 
             std::string msg;
             std::getline(readFromDB, msg);
 
             std::istringstream ss(msg);
             std::string token;
-
+            int i = 0; // iterator for while
             while (std::getline(ss, token, '$'))
             {
                     array[i] = token;
@@ -85,14 +85,16 @@ struct Chat
             }
            if (array[0] == _chatName)
             buffer.push_back("Public chat: " + array[0] + " From: " + array[2] + " Message: " + array[4]);
+
+           for (int i = 0; i < 5; ++i) // need to reset array and please remove magic number
+               array[i] = "0";
         }
     }
 
-    std::list<std::string> getChat() { return buffer; }
+    // std::list<std::string> getChat() { return buffer; } not used
 
     void print()
     {
-
         for (auto const& i : buffer) {
             std::cout << i << std::endl;
         }
@@ -101,14 +103,13 @@ struct Chat
 
 int main()
 {
-    //std::cout << "Hello World!\n";
-    Message test = { 1, 2, "hello world!"};
+    Message test = { 56, 65, "hello world!"};
     test.sendMessage();
-    Chat ch = {1, 2};
+    Chat ch = { 56, 65 };
     ch.print();
     Chat common = { "00-general" };
     common.print();
-    Message testGroup = { true, "00-general", 3, "public chat TEST message" };
+    Message testGroup = { true, "00-general", 3, "public chat \"TEST message" };
     testGroup.sendMessage();
 
 }
