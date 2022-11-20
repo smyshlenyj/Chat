@@ -2,64 +2,149 @@
 #include <fstream>
 #include <list>
 #include <sstream>
+#include <unordered_map>
 
-class IUser
-{
-public:
-		void log_in()
+std::unordered_map<std::string, int> populate_users() {
+		std::unordered_map<std::string, int> return_map;
+		std::ifstream readFromDB;
+		readFromDB.open("users.mdf", std::ios::in);
+		int counter_of_lines = 0;
+	 	std::string line;
+		std::string user;
+		while (!readFromDB.eof()) 
 		{
-			
+				std::getline(readFromDB, line);
+				for (auto i : line) {
+						if (i != '$') user.push_back(i);
+						else break;
+				}
+				return_map.insert( { user, counter_of_lines } );
+				++counter_of_lines;
+				user.clear();
 		}
+		return return_map;
+}
 
-		void Register(std::string login, std::string password)
-		{
-					
-		}
-private:
-		int userID;
-		std::string userLogin;
-		std::string password;
-};
+std::unordered_map<std::string, int> g_users = populate_users();
+
 
 bool is_valid_login(std::string login)
 {
-		//parse login
+		for (auto i : login) if (i == '$') return false;
+		if (login == "") return false;
 		return true;
 }
 
 bool is_valid_password(std::string password)
 {
-		//parse password 
+		for (auto i : password) if (i == '$') return false;
+		if (password == "") return false;
 		return true;
 }
 
+bool is_unique_login(std::string login)
+{
+		std::unordered_map<std::string, int>::iterator it;
+		it = g_users.find(login);
+		if (it != g_users.end()) return false;
+		return true;
+}
 
-void registration() {
+std::pair<std::string, std::string> input(){
 		std::string login, password;
-		int ID;
+		
 		std::cout << "Enter login: ";
 		std::cin >> login;
 		std::cout << '\n';
 
-		if (!is_valid_login(login))
-		{
-				std::cout << "Invalid Login, try again.\nEnter login: ";
-				std::cin >> login;
-				std::cout << '\n';
+		if (!is_valid_login(login)) {
+				std::cout << "Invalid Login.\n";
+				return {"", ""};
 		}
-		
+
 		std::cout << "Enter password: ";
 		std::cin >> password;
 		std::cout << '\n';
 		
-		if (!is_valid_password(password))
-		{
-				std::cout << "Invalid password, try again.\nEnter password: ";
-				std::cin >> password;
-				std::cout << '\n';
+		if (!is_valid_password(password)) {
+				std::cout << "Invalid password.\n";
+				return {"", ""};
 		}
+
+		return {login, password};
+}
+
+bool sign_up() {
+		std::pair<std::string, std::string> logpas = input();
+		if (!is_unique_login(logpas.first)) {
+				std::cout << "Invalid Login.\n";
+				return false;
+		}
+
+		std::ofstream out ("users.mdf", std::ios::app);
+
+		if (out.is_open()) {
+				out << logpas.first << "$" << logpas.second << '\n';  //add new user to file
+				std::cout << "Success! You are registered.\n";
+				g_users = populate_users(); //add new user to map	
+
+
+				for(std::unordered_map<std::string, int>::const_iterator it = g_users.begin(); it != g_users.end(); ++it)
+				{
+						std::cout << it->first << "\n";
+				}
+				std::cout << '\n' << "and" << '\n';
+				for(std::unordered_map<std::string, int>::const_iterator it = g_users.begin(); it != g_users.end(); ++it)
+				{
+						std::cout << it->second << "\n";
+				}	
+				return true;
+		}
+		else {
+				std::cout << "Something went wrong.\n";
+				return false;
+		}
+}
+
+std::string sign_in() {
+		std::pair<std::string, std::string> logpas = input();
+
+		// if (logpas.first == "") return "";
 		
 		
+		std::unordered_map<std::string, int>::const_iterator it = g_users.find(logpas.first);
+		if (it == g_users.end()) {
+				std::cout << "Such user doesn't exist.\n";
+				return "";
+		}
+
+		std::ifstream readFromDB;
+		readFromDB.open("users.mdf", std::ios::in);
+		std::string line;
+		std::string password = "";
+
+		int current_line = 0;
+		while (!readFromDB.eof()) {		
+				std::getline(readFromDB, line);
+				if (it->second == current_line) {
+						for (int i = 0; i < line.size(); ++i) {
+								if (line[i] == '$') {
+										for (int j = i + 1; j < line.size(); ++j) {
+												password.push_back(line[j]);	
+										}
+										break;
+								}
+						}
+						break;
+				}
+				current_line++;
+		}
+		if (password != logpas.second) {
+				std::cout << "Incorrect password.\n";
+				return "";
+		}
+
+		return logpas.first;
 }
 
 struct Message
@@ -164,13 +249,41 @@ struct Chat
 
 int main()
 {
-	Message test = { 56, 65, "hello world!" };
-	test.sendMessage();
-	Chat ch = { 56, 65 };
-	ch.print();
+		for(std::unordered_map<std::string, int>::const_iterator it = g_users.begin(); it != g_users.end(); ++it)
+		{
+				std::cout << it->first << "\n";
+		}
+		std::cout << '\n' << "and" << '\n';
+		for(std::unordered_map<std::string, int>::const_iterator it = g_users.begin(); it != g_users.end(); ++it)
+		{
+				std::cout << it->second << "\n";
+		}		
 
-	Message testGroup = { true, "00-general", 3, "public chat \"TEST message" };
-	testGroup.sendMessage();
-	Chat common = { "00-general" };
-	common.print();
+		int input;
+		std::string current_user;
+		bool escape = true;
+		while (escape) {
+				std::cout << "sign in, sign up, or leave: Enter '0', '1' or '2'\n";
+				std::cin >> input;
+				switch (input) {
+						case 0: {
+												current_user = sign_in();
+												if (current_user != "") escape = false;
+										}; break;
+						case 1: { if (sign_up()) break; }; break;
+						case 2: { escape = false; }; break;
+						default: std::cout << "Invalid input\n"; break;
+				}
+		}
+		
+		std::cout << '\n' << current_user << '\n';
+
+    // Message test = { 56, 65, "hello world!"};
+    // test.sendMessage();
+    // Chat ch = { 56, 65 };
+    // ch.print();
+    // Chat common = { "00-general" };
+    // common.print();
+    // Message testGroup = { true, "00-general", 3, "public chat \"TEST message" };
+    // testGroup.sendMessage();
 }
