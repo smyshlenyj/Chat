@@ -27,7 +27,6 @@ std::unordered_map<std::string, int> populate_users() {
 
 std::unordered_map<std::string, int> g_users = populate_users();
 
-
 bool is_valid_login(std::string login)
 {
 	for (auto i : login) if (i == '$') return false;
