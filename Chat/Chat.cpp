@@ -3,6 +3,65 @@
 #include <list>
 #include <sstream>
 
+class IUser
+{
+public:
+		void log_in()
+		{
+			
+		}
+
+		void Register(std::string login, std::string password)
+		{
+					
+		}
+private:
+		int userID;
+		std::string userLogin;
+		std::string password;
+};
+
+bool is_valid_login(std::string login)
+{
+		//parse login
+		return true;
+}
+
+bool is_valid_password(std::string password)
+{
+		//parse password 
+		return true;
+}
+
+
+void registration() {
+		std::string login, password;
+		int ID;
+		std::cout << "Enter login: ";
+		std::cin >> login;
+		std::cout << '\n';
+
+		if (!is_valid_login(login))
+		{
+				std::cout << "Invalid Login, try again.\nEnter login: ";
+				std::cin >> login;
+				std::cout << '\n';
+		}
+		
+		std::cout << "Enter password: ";
+		std::cin >> password;
+		std::cout << '\n';
+		
+		if (!is_valid_password(password))
+		{
+				std::cout << "Invalid password, try again.\nEnter password: ";
+				std::cin >> password;
+				std::cout << '\n';
+		}
+		
+		
+}
+
 struct Message
 {
 private:
