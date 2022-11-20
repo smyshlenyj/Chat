@@ -58,7 +58,7 @@ struct Chat
 					array[i] = token;
 					++i;
 				}
-
+				// showing messages linked with current users
 				if ((std::stoi(array[2]) == _id1 && std::stoi(array[3]) == _id2) || (std::stoi(array[2]) == _id2 && std::stoi(array[3]) == _id1))
 					buffer.push_back("From: " + array[2] + " To: " + array[3] + " Message: " + array[4]);
 			}
@@ -76,19 +76,20 @@ struct Chat
 			std::string msg;
 			std::getline(readFromDB, msg);
 
-			std::istringstream ss(msg);
-			std::string token;
-			int i = 0; // iterator for while
-			while (std::getline(ss, token, '$'))
+			if (!msg.empty())
 			{
-				array[i] = token;
-				++i;
-			}
-			if (array[0] == _chatName)
-				buffer.push_back("Public chat: " + array[0] + " From: " + array[2] + " Message: " + array[4]);
+				std::istringstream ss(msg);
+				std::string token;
+				int i = 0; // iterator for while
+				while (std::getline(ss, token, '$'))
+				{
+					array[i] = token;
+					++i;
+				}
 
-			for (int i = 0; i < 5; ++i) // need to reset array and please remove magic number
-				array[i] = "0";
+				if (array[0] == _chatName) // showing messages linked with current chat
+					buffer.push_back("Public chat: " + array[0] + " From: " + array[2] + " Message: " + array[4]);
+			}
 		}
 	}
 
@@ -106,12 +107,11 @@ int main()
 {
 	Message test = { 56, 65, "hello world!" };
 	test.sendMessage();
-
 	Chat ch = { 56, 65 };
 	ch.print();
-	Chat common = { "00-general" };
-	common.print();
+
 	Message testGroup = { true, "00-general", 3, "public chat \"TEST message" };
 	testGroup.sendMessage();
-
+	Chat common = { "00-general" };
+	common.print();
 }
