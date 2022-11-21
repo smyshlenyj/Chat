@@ -172,7 +172,7 @@ public:
 		std::ofstream out("messages.mdf", std::ios::app);
 		if (out.is_open())
 		{
-			out << chatName << "$" << groupChat << "$" << sender << "$" << recipient << "$" << message << std::endl;
+			out << chatName << "\t" << groupChat << "\t" << sender << "\t" << recipient << "\t" << message << std::endl;
 		}
 		out.close();
 	}
@@ -198,7 +198,7 @@ struct Chat
 				std::istringstream ss(msg);
 				std::string token;
 				int i = 0; // iterator for while
-				while (std::getline(ss, token, '$'))
+				while (std::getline(ss, token, '\t'))
 				{
 					array[i] = token;
 					++i;
@@ -226,7 +226,7 @@ struct Chat
 				std::istringstream ss(msg);
 				std::string token;
 				int i = 0; // iterator for while
-				while (std::getline(ss, token, '$'))
+				while (std::getline(ss, token, '\t'))
 				{
 					array[i] = token;
 					++i;
@@ -259,6 +259,7 @@ int main()
 		std::cin >> input;
 		switch (input) {
 		case 1: {
+			bool chatIsOpen = true;
 			current_user = sign_in();
 			//if (current_user != "") alive = false;
 
