@@ -4,14 +4,20 @@
 #include <sstream>
 #include <unordered_map>
 
-std::unordered_map<std::string, std::pair<std::string, int>> populate_users() {
-	std::unordered_map<std::string, std::pair<std::string, int>> return_map;
-	std::ifstream readFromDB;
-	readFromDB.open("users.mdf", std::ios::in);
+typedef std::unordered_map<std::string, std::pair<std::string, int>> special_map; 
+
+special_map populate_users() {
+	special_map return_map;
 	int counter_of_lines = 0;
 	std::string line;
 	std::string user;
 	std::string name;
+
+	std::ifstream readFromDB;
+	readFromDB.open("users.mdf", std::ios::in);
+
+	if (!readFromDB.is_open())
+		std::ofstream outfile ("users.mdf"); //create file in case it's not there
 	while (!readFromDB.eof()) 
 	{
 		std::getline(readFromDB, line);
@@ -28,10 +34,16 @@ std::unordered_map<std::string, std::pair<std::string, int>> populate_users() {
 		user.clear();
 		name.clear();
 	}
+
+	{ //delete last empty member
+		auto it = return_map.find("");
+		it = return_map.erase(it);
+	}
+
 	return return_map;
 }
 
-std::unordered_map<std::string, std::pair<std::string, int>> g_users = populate_users();
+special_map g_users = populate_users();
 
 
 bool is_valid_login(std::string login)
@@ -50,8 +62,7 @@ bool is_valid_password(std::string password)
 
 bool is_unique_login(std::string login)
 {
-	std::unordered_map<std::string, std::pair<std::string, int>>::iterator it;
-	it = g_users.find(login);
+	auto it = g_users.find(login);
 	if (it != g_users.end()) return false;
 	return true;
 }
@@ -59,23 +70,27 @@ bool is_unique_login(std::string login)
 std::pair<std::string, std::string> input(){
 	std::string login, password;
 	
-	std::cout << "Enter login: ";
-	std::cin >> login;
-	std::cout << '\n';
+	{
+		std::cout << "Enter login: ";
+		std::cin >> login;
+		std::cout << '\n';
 
-	if (!is_valid_login(login)) {
-		std::cout << "Invalid Login.\n";
-		return {"", ""};
+		if (!is_valid_login(login)) {
+			std::cout << "Invalid Login.\n";
+			return {"", ""};
+		}
 	}
 
-	std::cout << "Enter password: ";
-	std::cin >> password;
-	std::cout << '\n';
-	
-	if (!is_valid_password(password)) {
-		std::cout << "Invalid password.\n";
-		return {"", ""};
-	}
+	{
+		std::cout << "Enter password: ";
+		std::cin >> password;
+		std::cout << '\n';
+		
+		if (!is_valid_password(password)) {
+			std::cout << "Invalid password.\n";
+			return {"", ""};
+		}
+  }
 
 	return {login, password};
 }
@@ -96,25 +111,21 @@ bool sign_up() {
 
 	if (out.is_open()) {
 		out << logpas.first;  //add new user to file
-		for (auto i = logpas.first.size(); i < 32; i++) {
-			out << '$';
-		}
+		for (auto i = logpas.first.size(); i < 32; i++) out << '$';
 		out << name;
-		for (auto i = 32 + name.size(); i < 64; i++) {
-			out << '$';
-		}
+		for (auto i = 32 + name.size(); i < 64; i++) out << '$';
 		out << logpas.second << '\n';
 		std::cout << "Success! You are registered.\n";
 		// g_users = populate_users(); //add new user to map	
 
-		// for(std::unordered_map<std::string, std::pair<std::string, int>>::const_iterator it = g_users.begin(); it != g_users.end(); ++it)
+		// for(auto it = g_users.begin(); it != g_users.end(); ++it)
 		// {
 		// 	std::cout << it->first << "\n";
 		// }
 		// std::cout << '\n' << "and" << '\n';
-		// for(std::unordered_map<std::string, std::pair<std::string, int>>::const_iterator it = g_users.begin(); it != g_users.end(); ++it)
+		// for(auto it = g_users.begin(); it != g_users.end(); ++it)
 		// {
-		// 	std::cout << it->second << "\n";
+		// 	std::cout << it->second.first << "\n";
 		// }	
 		return true;
 	}
@@ -130,7 +141,7 @@ std::string sign_in() {
 	// if (logpas.first == "") return "";
 	
 	
-	std::unordered_map<std::string, std::pair<std::string, int>>::const_iterator it = g_users.find(logpas.first);
+	auto it = g_users.find(logpas.first);
 	if (it == g_users.end()) {
 		std::cout << "Such user doesn't exist.\n";
 		return "";
@@ -147,7 +158,7 @@ std::string sign_in() {
 		if (it->second.second == current_line) {
 			for (auto i = 64; i < line.size(); ++i) {
 				if (line[i] != '$') {
-						password.push_back(line[i]);	
+					password.push_back(line[i]);	
 				}
 				else {
 					break;
@@ -157,6 +168,7 @@ std::string sign_in() {
 		}
 		current_line++;
 	}
+
 	if (password != logpas.second) {
 		std::cout << "Incorrect password.\n";
 		return "";
@@ -166,7 +178,7 @@ std::string sign_in() {
 }
 
 std::string get_name(std::string login) {
-	std::unordered_map<std::string, std::pair<std::string, int>>::const_iterator it = g_users.find(login);
+	auto it = g_users.find(login);
 	if (it != g_users.end()) return it->second.first;
 	else                     return "";
 }
@@ -276,26 +288,21 @@ struct Chat
 
 int main()
 {
-	
-	{ //delete last empty member
-		std::unordered_map<std::string, std::pair<std::string, int>>::const_iterator it = g_users.find("");
-		it = g_users.erase(it);
-	}
+	// for(auto it = g_users.begin(); it != g_users.end(); ++it)
+	// {
+	// 		std::cout << it->first << "\n";
+	// }
+	// std::cout << '\n' << "and" << '\n';
+	// for(auto it = g_users.begin(); it != g_users.end(); ++it)
+	// {
+	// 		std::cout << it->second.first << "\n";
+	// }		
+	// std::cout << '\n' << "and" << '\n';
+	// for(auto it = g_users.begin(); it != g_users.end(); ++it)
+	// {
+	// 		std::cout << it->second.second << "\n";
+	// }		
 
-	for(std::unordered_map<std::string, std::pair<std::string, int>>::const_iterator it = g_users.begin(); it != g_users.end(); ++it)
-	{
-			std::cout << it->first << "\n";
-	}
-	std::cout << '\n' << "and" << '\n';
-	for(std::unordered_map<std::string, std::pair<std::string, int>>::const_iterator it = g_users.begin(); it != g_users.end(); ++it)
-	{
-			std::cout << it->second.first << "\n";
-	}		
-	std::cout << '\n' << "and" << '\n';
-	for(std::unordered_map<std::string, std::pair<std::string, int>>::const_iterator it = g_users.begin(); it != g_users.end(); ++it)
-	{
-			std::cout << it->second.second << "\n";
-	}		
 	int input;
 	std::string current_user;
 	bool escape = true;
@@ -304,8 +311,8 @@ int main()
 		std::cin >> input;
 		switch (input) {
 			case 0: {
-									current_user = sign_in();
-									if (current_user != "") escape = false;
+								current_user = sign_in();
+								if (current_user != "") escape = false;
 							}; break;
 			case 1: { if (sign_up()) break; }; break;
 			case 2: { escape = false; }; break;
