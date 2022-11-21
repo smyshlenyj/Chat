@@ -4,47 +4,28 @@
 #include <sstream>
 #include <unordered_map>
 
-typedef std::unordered_map<std::string, std::pair<std::string, int>> special_map; 
-
-special_map populate_users() {
-	special_map return_map;
+std::unordered_map<std::string, int> populate_users() {
+	std::unordered_map<std::string, int> return_map;
+	std::ifstream readFromDB;
+	readFromDB.open("users.mdf", std::ios::in);
 	int counter_of_lines = 0;
 	std::string line;
 	std::string user;
-	std::string name;
-
-	std::ifstream readFromDB;
-	readFromDB.open("users.mdf", std::ios::in);
-
-	if (!readFromDB.is_open())
-		std::ofstream outfile ("users.mdf"); //create file in case it's not there
-	while (!readFromDB.eof()) 
+	while (!readFromDB.eof())
 	{
 		std::getline(readFromDB, line);
 		for (auto i : line) {
 			if (i != '$') user.push_back(i);
 			else break;
 		}
-		for (auto i = 32; i < 64; i++) {
-			if (line[i] != '$') name.push_back(line[i]);
-			else break;
-		}
-		return_map.insert( { user, std::make_pair(name, counter_of_lines) } );
+		return_map.insert({ user, counter_of_lines });
 		++counter_of_lines;
 		user.clear();
-		name.clear();
 	}
-
-	{ //delete last empty member
-		auto it = return_map.find("");
-		it = return_map.erase(it);
-	}
-
 	return return_map;
 }
 
-special_map g_users = populate_users();
-
+std::unordered_map<std::string, int> g_users = populate_users();
 
 bool is_valid_login(std::string login)
 {
@@ -55,44 +36,41 @@ bool is_valid_login(std::string login)
 
 bool is_valid_password(std::string password)
 {
-	// for (auto i : password) if (i == '$') return false;
+	for (auto i : password) if (i == '$') return false;
 	if (password == "") return false;
 	return true;
 }
 
 bool is_unique_login(std::string login)
 {
-	auto it = g_users.find(login);
+	std::unordered_map<std::string, int>::iterator it;
+	it = g_users.find(login);
 	if (it != g_users.end()) return false;
 	return true;
 }
 
-std::pair<std::string, std::string> input(){
+std::pair<std::string, std::string> input() {
 	std::string login, password;
-	
-	{
-		std::cout << "Enter login: ";
-		std::cin >> login;
-		std::cout << '\n';
 
-		if (!is_valid_login(login)) {
-			std::cout << "Invalid Login.\n";
-			return {"", ""};
-		}
+	std::cout << "Enter login: ";
+	std::cin >> login;
+	std::cout << '\n';
+
+	if (!is_valid_login(login)) {
+		std::cout << "Invalid Login.\n";
+		return { "", "" };
 	}
 
-	{
-		std::cout << "Enter password: ";
-		std::cin >> password;
-		std::cout << '\n';
-		
-		if (!is_valid_password(password)) {
-			std::cout << "Invalid password.\n";
-			return {"", ""};
-		}
-  }
+	std::cout << "Enter password: ";
+	std::cin >> password;
+	std::cout << '\n';
 
-	return {login, password};
+	if (!is_valid_password(password)) {
+		std::cout << "Invalid password.\n";
+		return { "", "" };
+	}
+
+	return { login, password };
 }
 
 bool sign_up() {
@@ -102,31 +80,23 @@ bool sign_up() {
 		return false;
 	}
 
-	std::string name;
-	std::cout << "Enter your name: ";
-	std::cin >> name;
-	std::cout << '\n';
-	
-	std::ofstream out ("users.mdf", std::ios::app);
+	std::ofstream out("users.mdf", std::ios::app);
 
 	if (out.is_open()) {
-		out << logpas.first;  //add new user to file
-		for (auto i = logpas.first.size(); i < 32; i++) out << '$';
-		out << name;
-		for (auto i = 32 + name.size(); i < 64; i++) out << '$';
-		out << logpas.second << '\n';
+		out << logpas.first << "$" << logpas.second << '\n';  //add new user to file
 		std::cout << "Success! You are registered.\n";
-		// g_users = populate_users(); //add new user to map	
+		g_users = populate_users(); //add new user to map	
 
-		// for(auto it = g_users.begin(); it != g_users.end(); ++it)
-		// {
-		// 	std::cout << it->first << "\n";
-		// }
-		// std::cout << '\n' << "and" << '\n';
-		// for(auto it = g_users.begin(); it != g_users.end(); ++it)
-		// {
-		// 	std::cout << it->second.first << "\n";
-		// }	
+
+		for (std::unordered_map<std::string, int>::const_iterator it = g_users.begin(); it != g_users.end(); ++it)
+		{
+			std::cout << it->first << "\n";
+		}
+		std::cout << '\n' << "and" << '\n';
+		for (std::unordered_map<std::string, int>::const_iterator it = g_users.begin(); it != g_users.end(); ++it)
+		{
+			std::cout << it->second << "\n";
+		}
 		return true;
 	}
 	else {
@@ -139,9 +109,9 @@ std::string sign_in() {
 	std::pair<std::string, std::string> logpas = input();
 
 	// if (logpas.first == "") return "";
-	
-	
-	auto it = g_users.find(logpas.first);
+
+
+	std::unordered_map<std::string, int>::const_iterator it = g_users.find(logpas.first);
 	if (it == g_users.end()) {
 		std::cout << "Such user doesn't exist.\n";
 		return "";
@@ -153,14 +123,14 @@ std::string sign_in() {
 	std::string password = "";
 
 	int current_line = 0;
-	while (!readFromDB.eof()) {		
+	while (!readFromDB.eof()) {
 		std::getline(readFromDB, line);
-		if (it->second.second == current_line) {
-			for (auto i = 64; i < line.size(); ++i) {
-				if (line[i] != '$') {
-					password.push_back(line[i]);	
-				}
-				else {
+		if (it->second == current_line) {
+			for (int i = 0; i < line.size(); ++i) {
+				if (line[i] == '$') {
+					for (int j = i + 1; j < line.size(); ++j) {
+						password.push_back(line[j]);
+					}
 					break;
 				}
 			}
@@ -168,19 +138,12 @@ std::string sign_in() {
 		}
 		current_line++;
 	}
-
 	if (password != logpas.second) {
 		std::cout << "Incorrect password.\n";
 		return "";
 	}
 
 	return logpas.first;
-}
-
-std::string get_name(std::string login) {
-	auto it = g_users.find(login);
-	if (it != g_users.end()) return it->second.first;
-	else                     return "";
 }
 
 ///////////////////////////////////////////////////////////
@@ -287,15 +250,6 @@ struct Chat
 
 int main()
 {
-	for (std::unordered_map<std::string, int>::const_iterator it = g_users.begin(); it != g_users.end(); ++it)
-	{
-		std::cout << it->first << "\n";
-	}
-	std::cout << '\n' << "and" << '\n';
-	for (std::unordered_map<std::string, int>::const_iterator it = g_users.begin(); it != g_users.end(); ++it)
-	{
-		std::cout << it->second << "\n";
-	}
 
 	int input;
 	std::string current_user;
