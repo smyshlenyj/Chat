@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <fstream>
 #include <list>
 #include <sstream>
@@ -250,7 +250,6 @@ struct Chat
 
 int main()
 {
-
 	int input;
 	std::string current_user;
 	bool alive = true;
@@ -259,37 +258,26 @@ int main()
 		std::cin >> input;
 		switch (input) {
 		case 1: {
-			bool chatIsOpen = true;
 			current_user = sign_in();
-			//if (current_user != "") alive = false;
+			if (current_user != "") alive = false;
 
 			std::cout << "Hi, " << current_user << ", please type recipient name or public chat name: ";
 			std::string inputRecipient;
 			std::cin >> inputRecipient;
 			std::cout << '\n' << "Last messages in chat: " << '\n';
-			Chat temp = { current_user, inputRecipient };
-			temp.print();
+			Chat tempChat = { current_user, inputRecipient };
+			tempChat.print();
 			std::cout << '\n' << "Type your message here: " << '\n';
 			std::string inputMessage;
 			std::cin.ignore();
 			std::getline(std::cin, inputMessage, '\n');
 			Message tempMessage = { current_user, inputRecipient, inputMessage };
 			tempMessage.sendMessage();
+			std::cout << '\n' << "Your message has been sent. 50 cents will be debited from your account." << '\n';
 		}; break;
 		case 2: { if (sign_up()) break; }; break;
 		case 3: { alive = false; }; break;
 		default: std::cout << "Invalid input\n"; break;
 		}
 	}
-
-
-
-	//Message test = { "test_sender", "test_recipient", "hello world!" };
-	//test.sendMessage();
-	//Chat ch = { "test_sender", "test_recipient" };
-	//ch.print();
-	// Chat common = { "00-general" };
-	// common.print();
-	// Message testGroup = { true, "00-general", 3, "public chat \"TEST message" };
-	// testGroup.sendMessage();
 }
