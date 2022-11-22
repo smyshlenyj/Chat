@@ -17,7 +17,11 @@ special_map populate_users() {
 	readFromDB.open("users.mdf", std::ios::in);
 
 	if (!readFromDB.is_open())
-		std::ofstream outfile("users.mdf"); //create file in case it's not there
+	{
+		std::cout << "failed to open users.mdf" << '\n';
+		//std::ofstream outfile("users.mdf"); //create file in case it's not there
+	}
+
 	else {
 		while (!readFromDB.eof())
 		{
@@ -224,28 +228,27 @@ struct Chat
 	{
 		std::ifstream readFromDB;
 		readFromDB.open("messages.mdf", std::ios::in);
+			while (!readFromDB.eof())
+			{
+				std::string array[5];
+				std::string msg;
 
-				while (!readFromDB.eof())
+				std::getline(readFromDB, msg);
+				if (!msg.empty())
 				{
-					std::string array[5];
-					std::string msg;
-
-					std::getline(readFromDB, msg);
-					if (!msg.empty())
+					std::istringstream ss(msg);
+					std::string token;
+					int i = 0; // iterator for while
+					while (std::getline(ss, token, '\t'))
 					{
-						std::istringstream ss(msg);
-						std::string token;
-						int i = 0; // iterator for while
-						while (std::getline(ss, token, '\t'))
-						{
-							array[i] = token;
-							++i;
-						}
-						// showing messages linked with current users
-						if ((array[2] == _sender && array[3] == _recipient) || (array[2] == _recipient && array[3] == _sender))
-							buffer.push_back("From: " + array[2] + "\tTo: " + array[3] + "\tMessage: " + array[4]);
+						array[i] = token;
+						++i;
 					}
+					// showing messages linked with current users
+					if ((array[2] == _sender && array[3] == _recipient) || (array[2] == _recipient && array[3] == _sender))
+						buffer.push_back("From: " + array[2] + "\tTo: " + array[3] + "\tMessage: " + array[4]);
 				}
+			}
 	}
 
 	//Chat(std::string _chatName) // public chat constructor
