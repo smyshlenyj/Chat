@@ -203,7 +203,7 @@ public:
 
 	Message(bool _groupChat, std::string _chatName, std::string _sender, std::string _message) : groupChat(_groupChat), chatName(_chatName), sender(_sender), message(_message)
 	{
-		recipient = "_all"; //don't know is it necessary or not
+		recipient = "_all";
 	}
 
 	void sendMessage() // push message to data base
@@ -303,7 +303,7 @@ int main()
 	bool openSession = false;
 	bool openChat = false;
 	while (alive) {
-		std::cout << "Welcome to Stack, next generation messenger!\n\n";
+		std::cout << "\x1B[32mWelcome to Stack, past generation messenger!\033[0m\n\n";
 		std::cout << "\nPress\n '1' for sign in\n '2' for sign up\n '3' for exit\n";
 		std::cin >> input;
 		switch (input) {
