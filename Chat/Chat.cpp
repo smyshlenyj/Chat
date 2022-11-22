@@ -340,7 +340,7 @@ int main()
 		}; break;
 		case 2: { if (sign_up())
 		{
-		//	g_users = populate_users();
+			g_users = populate_users();
 			break;
 		}; break;
 		case 3:
