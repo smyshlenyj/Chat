@@ -3,29 +3,47 @@
 #include <list>
 #include <sstream>
 #include <unordered_map>
+#include <algorithm>
 
-std::unordered_map<std::string, int> populate_users() {
-	std::unordered_map<std::string, int> return_map;
-	std::ifstream readFromDB;
-	readFromDB.open("users.mdf", std::ios::in);
+typedef std::unordered_map<std::string, std::pair<std::string, int>> special_map;
+
+special_map populate_users() {
+	special_map return_map;
 	int counter_of_lines = 0;
 	std::string line;
 	std::string user;
-	while (!readFromDB.eof())
-	{
-		std::getline(readFromDB, line);
-		for (auto i : line) {
-			if (i != '$') user.push_back(i);
-			else break;
+	std::string name;
+
+	std::ifstream readFromDB;
+	readFromDB.open("users.mdf", std::ios::in);
+
+	if (!readFromDB.is_open())
+		std::ofstream outfile("users.mdf"); //create file in case it's not there
+	else {
+		while (!readFromDB.eof())
+		{
+			std::getline(readFromDB, line);
+			if (line != "") {
+				for (auto i : line) {
+					if (i != '$') user.push_back(i);
+					else break;
+				}
+				for (auto i = 32; i < 64; i++) {
+					if (line[i] != '$') name.push_back(line[i]);
+					else break;
+				}
+				return_map.insert({ user, std::make_pair(name, counter_of_lines) });
+				user.clear();
+				name.clear();
+			}
+			++counter_of_lines;
 		}
-		return_map.insert({ user, counter_of_lines });
-		++counter_of_lines;
-		user.clear();
 	}
 	return return_map;
 }
 
-std::unordered_map<std::string, int> g_users = populate_users();
+special_map g_users = populate_users();
+
 
 bool is_valid_login(std::string login)
 {
@@ -36,15 +54,14 @@ bool is_valid_login(std::string login)
 
 bool is_valid_password(std::string password)
 {
-	for (auto i : password) if (i == '$') return false;
+	// for (auto i : password) if (i == '$') return false;
 	if (password == "") return false;
 	return true;
 }
 
 bool is_unique_login(std::string login)
 {
-	std::unordered_map<std::string, int>::iterator it;
-	it = g_users.find(login);
+	auto it = g_users.find(login);
 	if (it != g_users.end()) return false;
 	return true;
 }
@@ -52,22 +69,26 @@ bool is_unique_login(std::string login)
 std::pair<std::string, std::string> input() {
 	std::string login, password;
 
-	std::cout << "Enter login: ";
-	std::cin >> login;
-	std::cout << '\n';
+	{
+		std::cout << "Enter login: ";
+		std::cin >> login;
+		std::cout << '\n';
 
-	if (!is_valid_login(login)) {
-		std::cout << "Invalid Login.\n";
-		return { "", "" };
+		if (!is_valid_login(login)) {
+			std::cout << "Invalid Login.\n";
+			return { "", "" };
+		}
 	}
 
-	std::cout << "Enter password: ";
-	std::cin >> password;
-	std::cout << '\n';
+	{
+		std::cout << "Enter password: ";
+		std::cin >> password;
+		std::cout << '\n';
 
-	if (!is_valid_password(password)) {
-		std::cout << "Invalid password.\n";
-		return { "", "" };
+		if (!is_valid_password(password)) {
+			std::cout << "Invalid password.\n";
+			return { "", "" };
+		}
 	}
 
 	return { login, password };
@@ -80,23 +101,31 @@ bool sign_up() {
 		return false;
 	}
 
+	std::string name;
+	std::cout << "Enter your name: ";
+	std::cin >> name;
+	std::cout << '\n';
+
+	std::cout << "Check your entries.\nYour login: " << logpas.first
+						<< "\nYour password: " << logpas.second
+						<< "\nYour name: " << name
+						<< "\nare those correct? Enter 'y' to proceed, 'q' to abort\n";
+	std::string inputt;
+	std::cin >> inputt;
+	if (inputt != "y") { 
+		std::cout << "aborted\n";
+		return false;
+	}
+
 	std::ofstream out("users.mdf", std::ios::app);
 
 	if (out.is_open()) {
-		out << logpas.first << "$" << logpas.second << '\n';  //add new user to file
+		out << logpas.first;  //add new user to file
+		for (auto i = logpas.first.size(); i < 32; i++) out << '$';
+		out << name;
+		for (auto i = 32 + name.size(); i < 64; i++) out << '$';
+		out << logpas.second << '\n';
 		std::cout << "Success! You are registered.\n";
-		g_users = populate_users(); //add new user to map	
-
-
-		for (std::unordered_map<std::string, int>::const_iterator it = g_users.begin(); it != g_users.end(); ++it)
-		{
-			std::cout << it->first << "\n";
-		}
-		std::cout << '\n' << "and" << '\n';
-		for (std::unordered_map<std::string, int>::const_iterator it = g_users.begin(); it != g_users.end(); ++it)
-		{
-			std::cout << it->second << "\n";
-		}
 		return true;
 	}
 	else {
@@ -108,10 +137,7 @@ bool sign_up() {
 std::string sign_in() {
 	std::pair<std::string, std::string> logpas = input();
 
-	// if (logpas.first == "") return "";
-
-
-	std::unordered_map<std::string, int>::const_iterator it = g_users.find(logpas.first);
+	auto it = g_users.find(logpas.first);
 	if (it == g_users.end()) {
 		std::cout << "Such user doesn't exist.\n";
 		return "";
@@ -125,12 +151,12 @@ std::string sign_in() {
 	int current_line = 0;
 	while (!readFromDB.eof()) {
 		std::getline(readFromDB, line);
-		if (it->second == current_line) {
-			for (int i = 0; i < line.size(); ++i) {
-				if (line[i] == '$') {
-					for (int j = i + 1; j < line.size(); ++j) {
-						password.push_back(line[j]);
-					}
+		if (it->second.second == current_line) {
+			for (auto i = 64; i < line.size(); ++i) {
+				if (line[i] != '$') {
+					password.push_back(line[i]);
+				}
+				else {
 					break;
 				}
 			}
@@ -138,6 +164,7 @@ std::string sign_in() {
 		}
 		current_line++;
 	}
+
 	if (password != logpas.second) {
 		std::cout << "Incorrect password.\n";
 		return "";
@@ -146,23 +173,31 @@ std::string sign_in() {
 	return logpas.first;
 }
 
+std::string get_name(std::string login) {
+	auto it = g_users.find(login);
+	if (it != g_users.end()) return it->second.first;
+	else                     return "";
+}
+
+///////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////
+
 struct Message
 {
 private:
 	bool groupChat;
-	int idSender, idRecipient;
-	std::string message, chatName;
+	std::string sender, recipient, message, chatName;
 
 public:
-	Message(int _idSender, int _idRecipient, std::string _message) : idSender(_idSender), idRecipient(_idRecipient), message(_message)
+	Message(std::string _sender, std::string _recipient, std::string _message) : sender(_sender), recipient(_recipient), message(_message)
 	{
 		groupChat = false;
 		chatName = "-";
 	}
 
-	Message(bool _groupChat, std::string _chatName, int _idSender, std::string _message) : groupChat(_groupChat), chatName(_chatName), idSender(_idSender), message(_message)
+	Message(bool _groupChat, std::string _chatName, std::string _sender, std::string _message) : groupChat(_groupChat), chatName(_chatName), sender(_sender), message(_message)
 	{
-		idRecipient = 0; //need to reserve 0 for public chat
+		recipient = "_all"; //don't know is it necessary or not
 	}
 
 	void sendMessage() // push message to data base
@@ -170,7 +205,7 @@ public:
 		std::ofstream out("messages.mdf", std::ios::app);
 		if (out.is_open())
 		{
-			out << chatName << "$" << groupChat << "$" << idSender << "$" << idRecipient << "$" << message << std::endl;
+			out << chatName << "\t" << groupChat << "\t" << sender << "\t" << recipient << "\t" << message << std::endl;
 		}
 		out.close();
 	}
@@ -180,65 +215,69 @@ struct Chat
 {
 	std::list<std::string> buffer;
 
-	Chat(int _id1, int _id2) // private chat constructor
+	Chat(std::string _sender, std::string _recipient) // private chat constructor
 	{
 		std::ifstream readFromDB;
 		readFromDB.open("messages.mdf", std::ios::in);
-
-		while (!readFromDB.eof())
-		{
-			std::string array[5];
-			std::string msg;
-
-			std::getline(readFromDB, msg);
-			if (!msg.empty())
+			while (!readFromDB.eof())
 			{
-				std::istringstream ss(msg);
-				std::string token;
-				int i = 0; // iterator for while
-				while (std::getline(ss, token, '$'))
+				std::string array[5];
+				std::string msg;
+
+				std::getline(readFromDB, msg);
+				if (!msg.empty())
 				{
-					array[i] = token;
-					++i;
+					std::istringstream ss(msg);
+					std::string token;
+					int i = 0; // iterator for while
+					while (std::getline(ss, token, '\t'))
+					{
+						array[i] = token;
+						++i;
+					}
+					// showing messages linked with current users
+					if ((array[2] == _sender && array[3] == _recipient) || (array[2] == _recipient && array[3] == _sender))
+						buffer.push_back("From: " + array[2] + "\tTo: " + array[3] + "\tMessage: " + array[4]);
 				}
-				// showing messages linked with current users
-				if ((std::stoi(array[2]) == _id1 && std::stoi(array[3]) == _id2) || (std::stoi(array[2]) == _id2 && std::stoi(array[3]) == _id1))
-					buffer.push_back("From: " + array[2] + " To: " + array[3] + " Message: " + array[4]);
 			}
-		}
 	}
 
-	Chat(std::string _chatName) // public chat constructor
-	{
-		std::ifstream readFromDB;
-		readFromDB.open("messages.mdf", std::ios::in);
-		std::string array[5];
+	//Chat(std::string _chatName) // public chat constructor
+	//{
+	//	std::ifstream readFromDB;
+	//	readFromDB.open("messages.mdf", std::ios::in);
+	//	std::string array[5];
 
-		while (!readFromDB.eof())
-		{
-			std::string msg;
-			std::getline(readFromDB, msg);
+	//	if (!readFromDB.is_open())
+	//		std::ofstream outfile("messages.mdf"); //create file in case it's not there
+	//	else
+	//	{
+	//		while (!readFromDB.eof())
+	//		{
+	//			std::string msg;
+	//			std::getline(readFromDB, msg);
 
-			if (!msg.empty())
-			{
-				std::istringstream ss(msg);
-				std::string token;
-				int i = 0; // iterator for while
-				while (std::getline(ss, token, '$'))
-				{
-					array[i] = token;
-					++i;
-				}
+	//			if (!msg.empty())
+	//			{
+	//				std::istringstream ss(msg);
+	//				std::string token;
+	//				int i = 0; // iterator for while
+	//				while (std::getline(ss, token, '\t'))
+	//				{
+	//					array[i] = token;
+	//					++i;
+	//				}
 
-				if (array[0] == _chatName) // showing messages linked with current chat
-					buffer.push_back("Public chat: " + array[0] + " From: " + array[2] + " Message: " + array[4]);
-			}
-		}
-	}
+	//				if (array[0] == _chatName) // showing messages linked with current chat
+	//					buffer.push_back("Public chat: " + array[0] + "\tFrom: " + array[2] + "\tMessage: " + array[4]);
+	//			}
+	//		}
+	//	}
+	//}
 
 	// std::list<std::string> getChat() { return buffer; } not used
 
-	void print()
+	void printChat()
 	{
 		for (auto const& i : buffer) {
 			std::cout << i << std::endl;
@@ -248,41 +287,73 @@ struct Chat
 
 int main()
 {
-	for (std::unordered_map<std::string, int>::const_iterator it = g_users.begin(); it != g_users.end(); ++it)
-	{
-		std::cout << it->first << "\n";
-	}
-	std::cout << '\n' << "and" << '\n';
-	for (std::unordered_map<std::string, int>::const_iterator it = g_users.begin(); it != g_users.end(); ++it)
-	{
-		std::cout << it->second << "\n";
-	}
-
 	int input;
 	std::string current_user;
-	bool escape = true;
-	while (escape) {
-		std::cout << "sign in, sign up, or leave: Enter '0', '1' or '2'\n";
+	bool alive = true;
+	bool openSession = false;
+	bool openChat = false;
+	while (alive) {
+		std::cout << "Welcome to Stack, next generation messenger!\n\n";
+		std::cout << "\nPress\n '1' for sign in\n '2' for sign up\n '3' for exit\n";
 		std::cin >> input;
 		switch (input) {
-		case 0: {
+		case 1: {
 			current_user = sign_in();
-			if (current_user != "") escape = false;
+			openSession = true;
+			if (current_user == "")
+				openSession = false;
+
+			while (openSession) {
+				std::cout << "Hi, " << current_user << ", please type recipient name or public chat name or 'q' to exit to main menu: ";
+				std::string inputRecipient;
+				std::cin >> inputRecipient;
+				if (inputRecipient == "q")
+					openSession = false;
+
+				openChat = true;
+				while (openChat && openSession) {
+					std::cout << '\n' << "Last messages in chat: \n";
+					Chat tempChat = { current_user, inputRecipient };
+					tempChat.printChat();
+					std::cout << '\n' << "Type your message here: \n";
+					std::string inputMessage;
+					std::cin.ignore();
+					std::getline(std::cin, inputMessage, '\n');
+					Message tempMessage = { current_user, inputRecipient, inputMessage };
+					tempMessage.sendMessage();
+					std::cout << '\n' << "Your message has been sent. 50 cents will be debited from your account.\n\nEnter '1' to type new message or 'q' to exit to chat menu\n";
+					char messageMenuChoice;
+					std::cin >> messageMenuChoice;
+					switch (messageMenuChoice)
+					{
+					case '1':
+					{
+						continue;
+					};
+					case 'q':
+					{
+						openChat = false;
+					};
+					}
+				}
+			}
 		}; break;
-		case 1: { if (sign_up()) break; }; break;
-		case 2: { escape = false; }; break;
+		case 2: { if (sign_up())
+		{
+		//	g_users = populate_users();
+			break;
+		}; break;
+		case 3:
+		{
+			openSession = false;
+			alive = false;
+		}; break;
 		default: std::cout << "Invalid input\n"; break;
 		}
+		}
 	}
+	//std::string current_name = get_name(current_user);
 
-	std::cout << '\n' << current_user << '\n';
-
-	// Message test = { 56, 65, "hello world!"};
-	// test.sendMessage();
-	// Chat ch = { 56, 65 };
-	// ch.print();
-	// Chat common = { "00-general" };
-	// common.print();
-	// Message testGroup = { true, "00-general", 3, "public chat \"TEST message" };
-	// testGroup.sendMessage();
+	//std::cout << '\n' << current_user << '\n';
+	//std::cout << '\n' << current_name << '\n';
 }
