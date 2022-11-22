@@ -254,6 +254,7 @@ int main()
 	std::string current_user;
 	bool alive = true;
 	while (alive) {
+		std::cout << "Welcome to Stack, next generation messenger!\n\n";
 		std::cout << "\nPress\n '1' for sign in\n '2' for sign up\n '3' for exit\n";
 		std::cin >> input;
 		switch (input) {
