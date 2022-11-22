@@ -315,7 +315,6 @@ int main()
 
 			while (openSession) {
 				std::cout << "Registered users:\n";
-				g_users = populate_users();
 				list_users();
 				std::cout << "\n";
 				std::cout << "Hi, " << current_user << ", please type recipient name or public chat name or 'q' to exit to main menu: ";
