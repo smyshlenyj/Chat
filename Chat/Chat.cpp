@@ -18,28 +18,29 @@ special_map populate_users() {
 
 	if (!readFromDB.is_open())
 		std::ofstream outfile("users.mdf"); //create file in case it's not there
-	while (!readFromDB.eof())
-	{
-		std::getline(readFromDB, line);
-		for (auto i : line) {
-			if (i != '$') user.push_back(i);
-			else break;
+	else {
+		while (!readFromDB.eof())
+		{
+			std::getline(readFromDB, line);
+			for (auto i : line) {
+				if (i != '$') user.push_back(i);
+				else break;
+			}
+			for (auto i = 32; i < 64; i++) {
+				if (line[i] != '$') name.push_back(line[i]);
+				else break;
+			}
+			return_map.insert({ user, std::make_pair(name, counter_of_lines) });
+			++counter_of_lines;
+			user.clear();
+			name.clear();
 		}
-		for (auto i = 32; i < 64; i++) {
-			if (line[i] != '$') name.push_back(line[i]);
-			else break;
+
+		{ //delete last empty member
+			auto it = return_map.find("");
+			it = return_map.erase(it);
 		}
-		return_map.insert({ user, std::make_pair(name, counter_of_lines) });
-		++counter_of_lines;
-		user.clear();
-		name.clear();
 	}
-
-	{ //delete last empty member
-		auto it = return_map.find("");
-		it = return_map.erase(it);
-	}
-
 	return return_map;
 }
 
@@ -224,25 +225,30 @@ struct Chat
 		std::ifstream readFromDB;
 		readFromDB.open("messages.mdf", std::ios::in);
 
-		while (!readFromDB.eof())
+		if (!readFromDB.is_open())
+			std::ofstream outfile("messages.mdf"); //create file in case it's not there
+		else
 		{
-			std::string array[5];
-			std::string msg;
-
-			std::getline(readFromDB, msg);
-			if (!msg.empty())
+			while (!readFromDB.eof())
 			{
-				std::istringstream ss(msg);
-				std::string token;
-				int i = 0; // iterator for while
-				while (std::getline(ss, token, '\t'))
+				std::string array[5];
+				std::string msg;
+
+				std::getline(readFromDB, msg);
+				if (!msg.empty())
 				{
-					array[i] = token;
-					++i;
+					std::istringstream ss(msg);
+					std::string token;
+					int i = 0; // iterator for while
+					while (std::getline(ss, token, '\t'))
+					{
+						array[i] = token;
+						++i;
+					}
+					// showing messages linked with current users
+					if ((array[2] == _sender && array[3] == _recipient) || (array[2] == _recipient && array[3] == _sender))
+						buffer.push_back("From: " + array[2] + "\tTo: " + array[3] + "\tMessage: " + array[4]);
 				}
-				// showing messages linked with current users
-				if ((array[2] == _sender && array[3] == _recipient) || (array[2] == _recipient && array[3] == _sender))
-					buffer.push_back("From: " + array[2] + "\tTo: " + array[3] + "\tMessage: " + array[4]);
 			}
 		}
 	}
@@ -253,24 +259,29 @@ struct Chat
 		readFromDB.open("messages.mdf", std::ios::in);
 		std::string array[5];
 
-		while (!readFromDB.eof())
+		if (!readFromDB.is_open())
+			std::ofstream outfile("messages.mdf"); //create file in case it's not there
+		else
 		{
-			std::string msg;
-			std::getline(readFromDB, msg);
-
-			if (!msg.empty())
+			while (!readFromDB.eof())
 			{
-				std::istringstream ss(msg);
-				std::string token;
-				int i = 0; // iterator for while
-				while (std::getline(ss, token, '\t'))
-				{
-					array[i] = token;
-					++i;
-				}
+				std::string msg;
+				std::getline(readFromDB, msg);
 
-				if (array[0] == _chatName) // showing messages linked with current chat
-					buffer.push_back("Public chat: " + array[0] + "\tFrom: " + array[2] + "\tMessage: " + array[4]);
+				if (!msg.empty())
+				{
+					std::istringstream ss(msg);
+					std::string token;
+					int i = 0; // iterator for while
+					while (std::getline(ss, token, '\t'))
+					{
+						array[i] = token;
+						++i;
+					}
+
+					if (array[0] == _chatName) // showing messages linked with current chat
+						buffer.push_back("Public chat: " + array[0] + "\tFrom: " + array[2] + "\tMessage: " + array[4]);
+				}
 			}
 		}
 	}
@@ -307,7 +318,7 @@ int main()
 				std::cin >> inputRecipient;
 				if (inputRecipient == "q")
 					openSession = false;
-				
+
 				openChat = true;
 				while (openChat && openSession) {
 					std::cout << '\n' << "Last messages in chat: \n";
@@ -335,12 +346,12 @@ int main()
 					}
 				}
 			}
-		};
+		}; break;
 		case 2: { if (sign_up()) break; }; break;
-		case 3: 
-		{ 
+		case 3:
+		{
 			openSession = false;
-			alive = false; 
+			alive = false;
 		}; break;
 		default: std::cout << "Invalid input\n"; break;
 		}
