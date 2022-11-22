@@ -297,17 +297,17 @@ void messageMenu(bool openChat, bool openSession, std::string current_user, std:
 
 int main()
 {
-	int input;
+	char input;
 	std::string current_user;
 	bool alive = true;
 	bool openSession = false;
 	bool openChat = false;
 	while (alive) {
 		std::cout << "\x1B[32mWelcome to Stack, past generation messenger!\033[0m\n\n";
-		std::cout << "\nPress\n '1' for sign in\n '2' for sign up\n '3' for exit\n";
+		std::cout << "\nPress\n '1' for sign in\n '2' for sign up\n 'q' for exit\n";
 		std::cin >> input;
 		switch (input) {
-		case 1: {
+		case '1': {
 			current_user = sign_in();
 			openSession = true;
 			if (current_user == "")
@@ -349,12 +349,12 @@ int main()
 
 			}
 		}; break;
-		case 2: { if (sign_up())
+		case '2': { if (sign_up())
 		{
 			g_users = populate_users();
 			break;
 		}; break;
-		case 3:
+		case 'q':
 		{
 			openSession = false;
 			alive = false;
