@@ -17,10 +17,7 @@ special_map populate_users() {
 	readFromDB.open("users.mdf", std::ios::in);
 
 	if (!readFromDB.is_open())
-	{
-		std::cout << "failed to open users.mdf" << '\n';
-		//std::ofstream outfile("users.mdf"); //create file in case it's not there
-	}
+		std::ofstream outfile("users.mdf"); //create file in case it's not there
 
 	else {
 		while (!readFromDB.eof())
@@ -308,8 +305,10 @@ int main()
 		switch (input) {
 		case 1: {
 			current_user = sign_in();
-			if (current_user != "") alive = false;
 			openSession = true;
+			if (current_user == "")
+				openSession = false;
+
 			while (openSession) {
 				std::cout << "Hi, " << current_user << ", please type recipient name or public chat name or 'q' to exit to main menu: ";
 				std::string inputRecipient;
@@ -345,7 +344,11 @@ int main()
 				}
 			}
 		}; break;
-		case 2: { if (sign_up()) break; }; break;
+		case 2: { if (sign_up())
+		{
+		//	g_users = populate_users();
+			break;
+		}; break;
 		case 3:
 		{
 			openSession = false;
@@ -353,8 +356,8 @@ int main()
 		}; break;
 		default: std::cout << "Invalid input\n"; break;
 		}
+		}
 	}
-
 	//std::string current_name = get_name(current_user);
 
 	//std::cout << '\n' << current_user << '\n';
