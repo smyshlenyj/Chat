@@ -38,11 +38,6 @@ special_map populate_users() {
 			}
 			++counter_of_lines;
 		}
-
-		// { //delete last empty member
-		// 	auto it = return_map.find("");
-		// 	it = return_map.erase(it);
-		// }
 	}
 	return return_map;
 }
@@ -131,17 +126,6 @@ bool sign_up() {
 		for (auto i = 32 + name.size(); i < 64; i++) out << '$';
 		out << logpas.second << '\n';
 		std::cout << "Success! You are registered.\n";
-		// g_users = populate_users(); //add new user to map	
-
-		// for(auto it = g_users.begin(); it != g_users.end(); ++it)
-		// {
-		// 	std::cout << it->first << "\n";
-		// }
-		// std::cout << '\n' << "and" << '\n';
-		// for(auto it = g_users.begin(); it != g_users.end(); ++it)
-		// {
-		// 	std::cout << it->second.first << "\n";
-		// }	
 		return true;
 	}
 	else {
@@ -152,9 +136,6 @@ bool sign_up() {
 
 std::string sign_in() {
 	std::pair<std::string, std::string> logpas = input();
-
-	// if (logpas.first == "") return "";
-
 
 	auto it = g_users.find(logpas.first);
 	if (it == g_users.end()) {
@@ -351,7 +332,7 @@ int main()
 					}
 				}
 			}; break; 
-			case 2: { if (sign_up()) break; }; break;
+			case 2: { if (sign_up()) g_users = populate_users(); break; }; break;
 			case 3: 
 			{ 
 				openSession = false;
@@ -360,9 +341,4 @@ int main()
 			default: std::cout << "Invalid input\n"; break;
 		}
 	}
-
-	//std::string current_name = get_name(current_user);
-
-	//std::cout << '\n' << current_user << '\n';
-	//std::cout << '\n' << current_name << '\n';
 }
