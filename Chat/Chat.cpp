@@ -1,8 +1,9 @@
-﻿#include <iostream>
+#include <iostream>
 #include <fstream>
 #include <list>
 #include <sstream>
 #include <unordered_map>
+#include <algorithm>
 
 typedef std::unordered_map<std::string, std::pair<std::string, int>> special_map;
 
@@ -18,28 +19,24 @@ special_map populate_users() {
 
 	if (!readFromDB.is_open())
 		std::ofstream outfile("users.mdf"); //create file in case it's not there
-
 	else {
 		while (!readFromDB.eof())
 		{
 			std::getline(readFromDB, line);
-			for (auto i : line) {
-				if (i != '$') user.push_back(i);
-				else break;
+			if (line != "") {
+				for (auto i : line) {
+					if (i != '$') user.push_back(i);
+					else break;
+				}
+				for (auto i = 32; i < 64; i++) {
+					if (line[i] != '$') name.push_back(line[i]);
+					else break;
+				}
+				return_map.insert({ user, std::make_pair(name, counter_of_lines) });
+				user.clear();
+				name.clear();
 			}
-			for (auto i = 32; i < 64; i++) {
-				if (line[i] != '$') name.push_back(line[i]);
-				else break;
-			}
-			return_map.insert({ user, std::make_pair(name, counter_of_lines) });
 			++counter_of_lines;
-			user.clear();
-			name.clear();
-		}
-
-		{ //delete last empty member
-			auto it = return_map.find("");
-			it = return_map.erase(it);
 		}
 	}
 	return return_map;
@@ -109,6 +106,17 @@ bool sign_up() {
 	std::cin >> name;
 	std::cout << '\n';
 
+	std::cout << "Check your entries.\nYour login: " << logpas.first
+						<< "\nYour password: " << logpas.second
+						<< "\nYour name: " << name
+						<< "\nare those correct? Enter 'y' to proceed, 'q' to abort\n";
+	std::string inputt;
+	std::cin >> inputt;
+	if (inputt != "y") { 
+		std::cout << "aborted\n";
+		return false;
+	}
+
 	std::ofstream out("users.mdf", std::ios::app);
 
 	if (out.is_open()) {
@@ -118,17 +126,6 @@ bool sign_up() {
 		for (auto i = 32 + name.size(); i < 64; i++) out << '$';
 		out << logpas.second << '\n';
 		std::cout << "Success! You are registered.\n";
-		// g_users = populate_users(); //add new user to map	
-
-		// for(auto it = g_users.begin(); it != g_users.end(); ++it)
-		// {
-		// 	std::cout << it->first << "\n";
-		// }
-		// std::cout << '\n' << "and" << '\n';
-		// for(auto it = g_users.begin(); it != g_users.end(); ++it)
-		// {
-		// 	std::cout << it->second.first << "\n";
-		// }	
 		return true;
 	}
 	else {
@@ -139,9 +136,6 @@ bool sign_up() {
 
 std::string sign_in() {
 	std::pair<std::string, std::string> logpas = input();
-
-	// if (logpas.first == "") return "";
-
 
 	auto it = g_users.find(logpas.first);
 	if (it == g_users.end()) {
