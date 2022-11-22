@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <fstream>
 #include <list>
 #include <sstream>
@@ -225,57 +225,61 @@ struct Chat
 	{
 		std::ifstream readFromDB;
 		readFromDB.open("messages.mdf", std::ios::in);
-
-		while (!readFromDB.eof())
-		{
-			std::string array[5];
-			std::string msg;
-
-			std::getline(readFromDB, msg);
-			if (!msg.empty())
+			while (!readFromDB.eof())
 			{
-				std::istringstream ss(msg);
-				std::string token;
-				int i = 0; // iterator for while
-				while (std::getline(ss, token, '\t'))
+				std::string array[5];
+				std::string msg;
+
+				std::getline(readFromDB, msg);
+				if (!msg.empty())
 				{
-					array[i] = token;
-					++i;
+					std::istringstream ss(msg);
+					std::string token;
+					int i = 0; // iterator for while
+					while (std::getline(ss, token, '\t'))
+					{
+						array[i] = token;
+						++i;
+					}
+					// showing messages linked with current users
+					if ((array[2] == _sender && array[3] == _recipient) || (array[2] == _recipient && array[3] == _sender))
+						buffer.push_back("From: " + array[2] + "\tTo: " + array[3] + "\tMessage: " + array[4]);
 				}
-				// showing messages linked with current users
-				if ((array[2] == _sender && array[3] == _recipient) || (array[2] == _recipient && array[3] == _sender))
-					buffer.push_back("From: " + array[2] + "\tTo: " + array[3] + "\tMessage: " + array[4]);
 			}
-		}
 	}
 
-	Chat(std::string _chatName) // public chat constructor
-	{
-		std::ifstream readFromDB;
-		readFromDB.open("messages.mdf", std::ios::in);
-		std::string array[5];
+	//Chat(std::string _chatName) // public chat constructor
+	//{
+	//	std::ifstream readFromDB;
+	//	readFromDB.open("messages.mdf", std::ios::in);
+	//	std::string array[5];
 
-		while (!readFromDB.eof())
-		{
-			std::string msg;
-			std::getline(readFromDB, msg);
+	//	if (!readFromDB.is_open())
+	//		std::ofstream outfile("messages.mdf"); //create file in case it's not there
+	//	else
+	//	{
+	//		while (!readFromDB.eof())
+	//		{
+	//			std::string msg;
+	//			std::getline(readFromDB, msg);
 
-			if (!msg.empty())
-			{
-				std::istringstream ss(msg);
-				std::string token;
-				int i = 0; // iterator for while
-				while (std::getline(ss, token, '\t'))
-				{
-					array[i] = token;
-					++i;
-				}
+	//			if (!msg.empty())
+	//			{
+	//				std::istringstream ss(msg);
+	//				std::string token;
+	//				int i = 0; // iterator for while
+	//				while (std::getline(ss, token, '\t'))
+	//				{
+	//					array[i] = token;
+	//					++i;
+	//				}
 
-				if (array[0] == _chatName) // showing messages linked with current chat
-					buffer.push_back("Public chat: " + array[0] + "\tFrom: " + array[2] + "\tMessage: " + array[4]);
-			}
-		}
-	}
+	//				if (array[0] == _chatName) // showing messages linked with current chat
+	//					buffer.push_back("Public chat: " + array[0] + "\tFrom: " + array[2] + "\tMessage: " + array[4]);
+	//			}
+	//		}
+	//	}
+	//}
 
 	// std::list<std::string> getChat() { return buffer; } not used
 
@@ -299,52 +303,64 @@ int main()
 		std::cout << "\nPress\n '1' for sign in\n '2' for sign up\n '3' for exit\n";
 		std::cin >> input;
 		switch (input) {
-			case 1: {
-				current_user = sign_in();
-				if (current_user != "") alive = false;
-				openSession = true;
-				while (openSession) {
-					std::cout << "Hi, " << current_user << ", please type recipient name or public chat name or 'q' to exit to main menu: ";
-					std::string inputRecipient;
-					std::cin >> inputRecipient;
-					if (inputRecipient == "q")
-						openSession = false;
-					
-					openChat = true;
-					while (openChat && openSession) {
-						std::cout << '\n' << "Last messages in chat: \n";
-						Chat tempChat = { current_user, inputRecipient };
-						tempChat.printChat();
-						std::cout << '\n' << "Type your message here: \n";
-						std::string inputMessage;
-						std::cin.ignore();
-						std::getline(std::cin, inputMessage, '\n');
-						Message tempMessage = { current_user, inputRecipient, inputMessage };
-						tempMessage.sendMessage();
-						std::cout << '\n' << "Your message has been sent. 50 cents will be debited from your account.\n\nEnter '1' to type new message or 'q' to exit to chat menu\n";
-						char messageMenuChoice;
-						std::cin >> messageMenuChoice;
-						switch (messageMenuChoice)
-						{
-							case '1':
-							{
-								continue;
-							};
-							case 'q':
-							{
-								openChat = false;
-							};
-						}
+		case 1: {
+			current_user = sign_in();
+			openSession = true;
+			if (current_user == "")
+				openSession = false;
+
+			while (openSession) {
+				list_users();
+				std::cout << "Hi, " << current_user << ", please type recipient name or public chat name or 'q' to exit to main menu: ";
+				std::string inputRecipient;
+				std::cin >> inputRecipient;
+				if (inputRecipient == "q")
+					openSession = false;
+
+				openChat = true;
+				while (openChat && openSession) {
+					std::cout << '\n' << "Last messages in chat: \n";
+					Chat tempChat = { current_user, inputRecipient };
+					tempChat.printChat();
+					std::cout << '\n' << "Type your message here: \n";
+					std::string inputMessage;
+					std::cin.ignore();
+					std::getline(std::cin, inputMessage, '\n');
+					Message tempMessage = { current_user, inputRecipient, inputMessage };
+					tempMessage.sendMessage();
+					std::cout << '\n' << "Your message has been sent. 50 cents will be debited from your account.\n\nEnter '1' to type new message or 'q' to exit to chat menu\n";
+					char messageMenuChoice;
+					std::cin >> messageMenuChoice;
+					switch (messageMenuChoice)
+					{
+					case '1':
+					{
+						continue;
+					};
+					case 'q':
+					{
+						openChat = false;
+					};
 					}
 				}
-			}; break; 
-			case 2: { if (sign_up()) g_users = populate_users(); break; }; break;
-			case 3: 
-			{ 
-				openSession = false;
-				alive = false; 
-			}; break;
-			default: std::cout << "Invalid input\n"; break;
+			}
+		}; break;
+		case 2: { if (sign_up())
+		{
+			g_users = populate_users();
+			break;
+		}; break;
+		case 3:
+		{
+			openSession = false;
+			alive = false;
+		}; break;
+		default: std::cout << "Invalid input\n"; break;
+		}
 		}
 	}
+	//std::string current_name = get_name(current_user);
+
+	//std::cout << '\n' << current_user << '\n';
+	//std::cout << '\n' << current_name << '\n';
 }
