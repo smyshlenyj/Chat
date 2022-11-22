@@ -117,7 +117,10 @@ bool sign_up() {
 						<< "\nare those correct? Enter 'y' to proceed, 'q' to abort\n";
 	std::string inputt;
 	std::cin >> inputt;
-	if (inputt != "q") return false;
+	if (inputt != "y") { 
+		std::cout << "aborted\n";
+		return false;
+	}
 
 	std::ofstream out("users.mdf", std::ios::app);
 
