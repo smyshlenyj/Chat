@@ -179,6 +179,12 @@ std::string get_name(std::string login) {
 	else                     return "";
 }
 
+void list_users() {
+	for (auto i : g_users) {
+		std::cout << "User: " << i.first << ", Name: " << i.second.first << '\n';
+	}
+}
+
 ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////
 
