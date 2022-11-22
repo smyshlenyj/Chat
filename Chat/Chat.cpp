@@ -3,6 +3,7 @@
 #include <list>
 #include <sstream>
 #include <unordered_map>
+#include <algorithm>
 
 typedef std::unordered_map<std::string, std::pair<std::string, int>> special_map;
 
@@ -19,27 +20,29 @@ special_map populate_users() {
 	if (!readFromDB.is_open())
 		std::ofstream outfile("users.mdf"); //create file in case it's not there
 	else {
-	while (!readFromDB.eof())
-	{
-		std::getline(readFromDB, line);
-		for (auto i : line) {
-			if (i != '$') user.push_back(i);
-			else break;
+		while (!readFromDB.eof())
+		{
+			std::getline(readFromDB, line);
+			if (line != "") {
+				for (auto i : line) {
+					if (i != '$') user.push_back(i);
+					else break;
+				}
+				for (auto i = 32; i < 64; i++) {
+					if (line[i] != '$') name.push_back(line[i]);
+					else break;
+				}
+				return_map.insert({ user, std::make_pair(name, counter_of_lines) });
+				user.clear();
+				name.clear();
+			}
+			++counter_of_lines;
 		}
-		for (auto i = 32; i < 64; i++) {
-			if (line[i] != '$') name.push_back(line[i]);
-			else break;
-		}
-		return_map.insert({ user, std::make_pair(name, counter_of_lines) });
-		++counter_of_lines;
-		user.clear();
-		name.clear();
-	}
 
-	{ //delete last empty member
-		auto it = return_map.find("");
-		it = return_map.erase(it);
-	}
+		// { //delete last empty member
+		// 	auto it = return_map.find("");
+		// 	it = return_map.erase(it);
+		// }
 	}
 	return return_map;
 }
@@ -107,6 +110,14 @@ bool sign_up() {
 	std::cout << "Enter your name: ";
 	std::cin >> name;
 	std::cout << '\n';
+
+	std::cout << "Check your entries.\nYour login: " << logpas.first
+						<< "\nYour password: " << logpas.second
+						<< "\nYour name: " << name
+						<< "\nare those correct? Enter 'y' to proceed, 'q' to abort\n";
+	std::string inputt;
+	std::cin >> inputt;
+	if (inputt != "q") return false;
 
 	std::ofstream out("users.mdf", std::ios::app);
 
@@ -298,52 +309,52 @@ int main()
 		std::cout << "\nPress\n '1' for sign in\n '2' for sign up\n '3' for exit\n";
 		std::cin >> input;
 		switch (input) {
-		case 1: {
-			current_user = sign_in();
-			if (current_user != "") alive = false;
-			openSession = true;
-			while (openSession) {
-				std::cout << "Hi, " << current_user << ", please type recipient name or public chat name or 'q' to exit to main menu: ";
-				std::string inputRecipient;
-				std::cin >> inputRecipient;
-				if (inputRecipient == "q")
-					openSession = false;
-				
-				openChat = true;
-				while (openChat && openSession) {
-					std::cout << '\n' << "Last messages in chat: \n";
-					Chat tempChat = { current_user, inputRecipient };
-					tempChat.printChat();
-					std::cout << '\n' << "Type your message here: \n";
-					std::string inputMessage;
-					std::cin.ignore();
-					std::getline(std::cin, inputMessage, '\n');
-					Message tempMessage = { current_user, inputRecipient, inputMessage };
-					tempMessage.sendMessage();
-					std::cout << '\n' << "Your message has been sent. 50 cents will be debited from your account.\n\nEnter '1' to type new message or 'q' to exit to chat menu\n";
-					char messageMenuChoice;
-					std::cin >> messageMenuChoice;
-					switch (messageMenuChoice)
-					{
-					case '1':
-					{
-						continue;
-					};
-					case 'q':
-					{
-						openChat = false;
-					};
+			case 1: {
+				current_user = sign_in();
+				if (current_user != "") alive = false;
+				openSession = true;
+				while (openSession) {
+					std::cout << "Hi, " << current_user << ", please type recipient name or public chat name or 'q' to exit to main menu: ";
+					std::string inputRecipient;
+					std::cin >> inputRecipient;
+					if (inputRecipient == "q")
+						openSession = false;
+					
+					openChat = true;
+					while (openChat && openSession) {
+						std::cout << '\n' << "Last messages in chat: \n";
+						Chat tempChat = { current_user, inputRecipient };
+						tempChat.printChat();
+						std::cout << '\n' << "Type your message here: \n";
+						std::string inputMessage;
+						std::cin.ignore();
+						std::getline(std::cin, inputMessage, '\n');
+						Message tempMessage = { current_user, inputRecipient, inputMessage };
+						tempMessage.sendMessage();
+						std::cout << '\n' << "Your message has been sent. 50 cents will be debited from your account.\n\nEnter '1' to type new message or 'q' to exit to chat menu\n";
+						char messageMenuChoice;
+						std::cin >> messageMenuChoice;
+						switch (messageMenuChoice)
+						{
+							case '1':
+							{
+								continue;
+							};
+							case 'q':
+							{
+								openChat = false;
+							};
+						}
 					}
 				}
-			}
-		}; break;
-		case 2: { if (sign_up()) break; }; break;
-		case 3: 
-		{ 
-			openSession = false;
-			alive = false; 
-		}; break;
-		default: std::cout << "Invalid input\n"; break;
+			}; break; 
+			case 2: { if (sign_up()) break; }; break;
+			case 3: 
+			{ 
+				openSession = false;
+				alive = false; 
+			}; break;
+			default: std::cout << "Invalid input\n"; break;
 		}
 	}
 
