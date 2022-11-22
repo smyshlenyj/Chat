@@ -107,12 +107,12 @@ bool sign_up() {
 	std::cout << '\n';
 
 	std::cout << "Check your entries.\nYour login: " << logpas.first
-						<< "\nYour password: " << logpas.second
-						<< "\nYour name: " << name
-						<< "\nare those correct? Enter 'y' to proceed, 'q' to abort\n";
+		<< "\nYour password: " << logpas.second
+		<< "\nYour name: " << name
+		<< "\nare those correct? Enter 'y' to proceed, 'q' to abort\n";
 	std::string inputt;
 	std::cin >> inputt;
-	if (inputt != "y") { 
+	if (inputt != "y") {
 		std::cout << "aborted\n";
 		return false;
 	}
@@ -245,47 +245,18 @@ struct Chat
 						++i;
 					}
 					// showing messages linked with current users
-					if ((array[2] == _sender && array[3] == _recipient) || (array[2] == _recipient && array[3] == _sender))
+
+					if (array[3] == "_all" && _recipient == "_all") // showing messages linked with current chat
+						buffer.push_back("Public chat\tFrom: " + array[2] + "\tMessage: " + array[4]);
+
+					else if (_recipient != "_all" && ((array[2] == _sender && array[3] == _recipient) || (array[2] == _recipient && array[3] == _sender)))
 						buffer.push_back("From: " + array[2] + "\tTo: " + array[3] + "\tMessage: " + array[4]);
+
+
 				}
 			}
 		}
 	}
-
-	Chat(std::string _chatName) // public chat constructor
-	{
-		std::ifstream readFromDB;
-		readFromDB.open("messages.mdf", std::ios::in);
-		std::string array[5];
-
-		if (!readFromDB.is_open())
-			std::ofstream outfile("messages.mdf"); //create file in case it's not there
-		else
-		{
-			while (!readFromDB.eof())
-			{
-				std::string msg;
-				std::getline(readFromDB, msg);
-
-				if (!msg.empty())
-				{
-					std::istringstream ss(msg);
-					std::string token;
-					int i = 0; // iterator for while
-					while (std::getline(ss, token, '\t'))
-					{
-						array[i] = token;
-						++i;
-					}
-
-					if (array[0] == _chatName) // showing messages linked with current chat
-						buffer.push_back("Public chat: " + array[0] + "\tFrom: " + array[2] + "\tMessage: " + array[4]);
-				}
-			}
-		}
-	}
-
-	// std::list<std::string> getChat() { return buffer; } not used
 
 	void printChat()
 	{
@@ -294,6 +265,35 @@ struct Chat
 		}
 	}
 };
+void messageMenu(bool openChat, bool openSession, std::string current_user, std::string inputRecipient)
+{
+	while (openChat && openSession) {
+		std::cout << '\n' << "Last messages in chat: \n";
+		Chat tempChat = { current_user, inputRecipient };
+		tempChat.printChat();
+		std::cout << '\n' << "Type your message here: \n";
+		std::string inputMessage;
+		std::cin.ignore();
+		std::getline(std::cin, inputMessage, '\n');
+		Message tempMessage = { current_user, inputRecipient, inputMessage };
+		tempMessage.sendMessage();
+		std::cout << '\n' << "Your message has been sent. 50 cents will be debited from your account.\n\nEnter '1' to type new message or 'q' to exit to chat menu\n";
+		char messageMenuChoice;
+		std::cin >> messageMenuChoice;
+		switch (messageMenuChoice)
+		{
+		case '1':
+		{
+			continue;
+		};
+		case 'q':
+		{
+			openChat = false;
+			break;
+		};
+		}
+	}
+}
 
 int main()
 {
@@ -314,41 +314,39 @@ int main()
 				openSession = false;
 
 			while (openSession) {
-				std::cout << "Registered users:\n";
+				std::cout << "\nRegistered users:\n";
 				list_users();
 				std::cout << "\n";
-				std::cout << "Hi, " << current_user << ", please type recipient name or public chat name or 'q' to exit to main menu: ";
+				std::cout << "Hi, " << current_user << ", please type recipient name or 'p' for public chat or 'q' to exit to main menu: ";
 				std::string inputRecipient;
 				std::cin >> inputRecipient;
-				if (inputRecipient == "q")
-					openSession = false;
 
-				openChat = true;
-				while (openChat && openSession) {
-					std::cout << '\n' << "Last messages in chat: \n";
-					Chat tempChat = { current_user, inputRecipient };
-					tempChat.printChat();
-					std::cout << '\n' << "Type your message here: \n";
-					std::string inputMessage;
-					std::cin.ignore();
-					std::getline(std::cin, inputMessage, '\n');
-					Message tempMessage = { current_user, inputRecipient, inputMessage };
-					tempMessage.sendMessage();
-					std::cout << '\n' << "Your message has been sent. 50 cents will be debited from your account.\n\nEnter '1' to type new message or 'q' to exit to chat menu\n";
-					char messageMenuChoice;
-					std::cin >> messageMenuChoice;
-					switch (messageMenuChoice)
+				if (inputRecipient == "q")
+				{
+					inputRecipient.clear();
+					openSession = false;
+					break;
+				}
+
+				if (inputRecipient == "p")
+				{
+					messageMenu(true, openSession, current_user, "_all");
+					continue;
+				}
+
+				else
+					openChat = true;
+				for (auto i : g_users)
+				{
+					if (i.first != inputRecipient)
 					{
-					case '1':
-					{
-						continue;
-					};
-					case 'q':
-					{
+						std::cout << "User " << inputRecipient << " not found, please try again \n";
 						openChat = false;
-					};
 					}
 				}
+
+				messageMenu(openChat, openSession, current_user, inputRecipient);
+
 			}
 		}; break;
 		case 2: { if (sign_up())
@@ -365,8 +363,4 @@ int main()
 		}
 		}
 	}
-	//std::string current_name = get_name(current_user);
-
-	//std::cout << '\n' << current_user << '\n';
-	//std::cout << '\n' << current_name << '\n';
 }
