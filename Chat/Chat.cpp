@@ -225,6 +225,9 @@ struct Chat
 	{
 		std::ifstream readFromDB;
 		readFromDB.open("messages.mdf", std::ios::in);
+		if (!readFromDB.is_open())
+			std::ofstream outfile("messages.mdf"); //create file in case it's not there
+		else {
 			while (!readFromDB.eof())
 			{
 				std::string array[5];
@@ -246,40 +249,41 @@ struct Chat
 						buffer.push_back("From: " + array[2] + "\tTo: " + array[3] + "\tMessage: " + array[4]);
 				}
 			}
+		}
 	}
 
-	//Chat(std::string _chatName) // public chat constructor
-	//{
-	//	std::ifstream readFromDB;
-	//	readFromDB.open("messages.mdf", std::ios::in);
-	//	std::string array[5];
+	Chat(std::string _chatName) // public chat constructor
+	{
+		std::ifstream readFromDB;
+		readFromDB.open("messages.mdf", std::ios::in);
+		std::string array[5];
 
-	//	if (!readFromDB.is_open())
-	//		std::ofstream outfile("messages.mdf"); //create file in case it's not there
-	//	else
-	//	{
-	//		while (!readFromDB.eof())
-	//		{
-	//			std::string msg;
-	//			std::getline(readFromDB, msg);
+		if (!readFromDB.is_open())
+			std::ofstream outfile("messages.mdf"); //create file in case it's not there
+		else
+		{
+			while (!readFromDB.eof())
+			{
+				std::string msg;
+				std::getline(readFromDB, msg);
 
-	//			if (!msg.empty())
-	//			{
-	//				std::istringstream ss(msg);
-	//				std::string token;
-	//				int i = 0; // iterator for while
-	//				while (std::getline(ss, token, '\t'))
-	//				{
-	//					array[i] = token;
-	//					++i;
-	//				}
+				if (!msg.empty())
+				{
+					std::istringstream ss(msg);
+					std::string token;
+					int i = 0; // iterator for while
+					while (std::getline(ss, token, '\t'))
+					{
+						array[i] = token;
+						++i;
+					}
 
-	//				if (array[0] == _chatName) // showing messages linked with current chat
-	//					buffer.push_back("Public chat: " + array[0] + "\tFrom: " + array[2] + "\tMessage: " + array[4]);
-	//			}
-	//		}
-	//	}
-	//}
+					if (array[0] == _chatName) // showing messages linked with current chat
+						buffer.push_back("Public chat: " + array[0] + "\tFrom: " + array[2] + "\tMessage: " + array[4]);
+				}
+			}
+		}
+	}
 
 	// std::list<std::string> getChat() { return buffer; } not used
 
@@ -310,7 +314,10 @@ int main()
 				openSession = false;
 
 			while (openSession) {
+				std::cout << "Registered users:\n";
+				g_users = populate_users();
 				list_users();
+				std::cout << "\n";
 				std::cout << "Hi, " << current_user << ", please type recipient name or public chat name or 'q' to exit to main menu: ";
 				std::string inputRecipient;
 				std::cin >> inputRecipient;
