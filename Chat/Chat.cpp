@@ -18,28 +18,29 @@ special_map populate_users() {
 
 	if (!readFromDB.is_open())
 		std::ofstream outfile("users.mdf"); //create file in case it's not there
-	while (!readFromDB.eof())
-	{
-		std::getline(readFromDB, line);
-		for (auto i : line) {
-			if (i != '$') user.push_back(i);
-			else break;
+	else {
+		while (!readFromDB.eof())
+		{
+			std::getline(readFromDB, line);
+			for (auto i : line) {
+				if (i != '$') user.push_back(i);
+				else break;
+			}
+			for (auto i = 32; i < 64; i++) {
+				if (line[i] != '$') name.push_back(line[i]);
+				else break;
+			}
+			return_map.insert({ user, std::make_pair(name, counter_of_lines) });
+			++counter_of_lines;
+			user.clear();
+			name.clear();
 		}
-		for (auto i = 32; i < 64; i++) {
-			if (line[i] != '$') name.push_back(line[i]);
-			else break;
+
+		{ //delete last empty member
+			auto it = return_map.find("");
+			it = return_map.erase(it);
 		}
-		return_map.insert({ user, std::make_pair(name, counter_of_lines) });
-		++counter_of_lines;
-		user.clear();
-		name.clear();
 	}
-
-	{ //delete last empty member
-		auto it = return_map.find("");
-		it = return_map.erase(it);
-	}
-
 	return return_map;
 }
 
