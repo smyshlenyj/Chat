@@ -179,6 +179,12 @@ std::string get_name(std::string login) {
 	else                     return "";
 }
 
+void list_users() {
+	for (auto i : g_users) {
+		std::cout << "User: " << i.first << ", Name: " << i.second.first << '\n';
+	}
+}
+
 ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////
 
@@ -304,6 +310,7 @@ int main()
 				openSession = false;
 
 			while (openSession) {
+				list_users();
 				std::cout << "Hi, " << current_user << ", please type recipient name or public chat name or 'q' to exit to main menu: ";
 				std::string inputRecipient;
 				std::cin >> inputRecipient;
