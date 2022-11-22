@@ -164,7 +164,7 @@ public:
 
 	Message(bool _groupChat, std::string _chatName, std::string _sender, std::string _message) : groupChat(_groupChat), chatName(_chatName), sender(_sender), message(_message)
 	{
-		recipient = "_all"; //need to reserve name for public chat
+		recipient = "_all"; //don't know is it necessary or not
 	}
 
 	void sendMessage() // push message to data base
@@ -253,6 +253,8 @@ int main()
 	int input;
 	std::string current_user;
 	bool alive = true;
+	bool openSession = false;
+	bool openChat = false;
 	while (alive) {
 		std::cout << "Welcome to Stack, next generation messenger!\n\n";
 		std::cout << "\nPress\n '1' for sign in\n '2' for sign up\n '3' for exit\n";
@@ -261,23 +263,51 @@ int main()
 		case 1: {
 			current_user = sign_in();
 			if (current_user != "") alive = false;
-
-			std::cout << "Hi, " << current_user << ", please type recipient name or public chat name: ";
-			std::string inputRecipient;
-			std::cin >> inputRecipient;
-			std::cout << '\n' << "Last messages in chat: " << '\n';
-			Chat tempChat = { current_user, inputRecipient };
-			tempChat.print();
-			std::cout << '\n' << "Type your message here: " << '\n';
-			std::string inputMessage;
-			std::cin.ignore();
-			std::getline(std::cin, inputMessage, '\n');
-			Message tempMessage = { current_user, inputRecipient, inputMessage };
-			tempMessage.sendMessage();
-			std::cout << '\n' << "Your message has been sent. 50 cents will be debited from your account." << '\n';
-		}; break;
+			openSession = true;
+			while (openSession) {
+				std::cout << "Hi, " << current_user << ", please type recipient name or public chat name or 'q' to exit to main menu: ";
+				std::string inputRecipient;
+				std::cin >> inputRecipient;
+				if (inputRecipient == "q")
+				{
+					openSession = false;
+					continue;
+				}
+				
+				openChat = true;
+				while (openChat) {
+					std::cout << '\n' << "Last messages in chat: \n";
+					Chat tempChat = { current_user, inputRecipient };
+					tempChat.print();
+					std::cout << '\n' << "Type your message here: \n";
+					std::string inputMessage;
+					std::cin.ignore();
+					std::getline(std::cin, inputMessage, '\n');
+					Message tempMessage = { current_user, inputRecipient, inputMessage };
+					tempMessage.sendMessage();
+					std::cout << '\n' << "Your message has been sent. 50 cents will be debited from your account.\n\nEnter '1' to type new message or 'q' to exit to chat menu\n";
+					char messageMenuChoice;
+					std::cin >> messageMenuChoice;
+					switch (messageMenuChoice)
+					{
+					case '1':
+					{
+						continue;
+					};
+					case 'q':
+					{
+						openChat = false;
+					};
+					}
+				}
+			}
+		};
 		case 2: { if (sign_up()) break; }; break;
-		case 3: { alive = false; }; break;
+		case 3: 
+		{ 
+			openSession = false;
+			alive = false; 
+		}; break;
 		default: std::cout << "Invalid input\n"; break;
 		}
 	}
