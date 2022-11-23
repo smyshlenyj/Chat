@@ -335,17 +335,20 @@ int main()
 				}
 
 				else
-					openChat = true;
+				openChat = false;
+				bool recipientExists = false;
 				for (auto i : g_users)
 				{
-					if (i.first != inputRecipient)
+					if (i.first == inputRecipient)
 					{
-						std::cout << "User " << inputRecipient << " not found, please try again \n";
-						openChat = false;
+						openChat = true;
+						recipientExists = true;
+						break;
 					}
 				}
 
-				messageMenu(openChat, openSession, current_user, inputRecipient);
+				if (recipientExists) messageMenu(openChat, openSession, current_user, inputRecipient);
+				else std::cout << "User " << inputRecipient << " not found, please try again \n";
 
 			}
 		}; break;
