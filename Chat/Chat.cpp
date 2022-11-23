@@ -191,19 +191,11 @@ void list_users() {
 struct Message
 {
 private:
-	bool groupChat;
-	std::string sender, recipient, message, chatName;
+	std::string sender, recipient, message;
 
 public:
 	Message(std::string _sender, std::string _recipient, std::string _message) : sender(_sender), recipient(_recipient), message(_message)
 	{
-		groupChat = false;
-		chatName = "-";
-	}
-
-	Message(bool _groupChat, std::string _chatName, std::string _sender, std::string _message) : groupChat(_groupChat), chatName(_chatName), sender(_sender), message(_message)
-	{
-		recipient = "_all";
 	}
 
 	void sendMessage() // push message to data base
@@ -211,7 +203,7 @@ public:
 		std::ofstream out("messages.mdf", std::ios::app);
 		if (out.is_open())
 		{
-			out << chatName << "\t" << groupChat << "\t" << sender << "\t" << recipient << "\t" << message << std::endl;
+			out << sender << "\t" << recipient << "\t" << message << std::endl;
 		}
 		out.close();
 	}
@@ -230,7 +222,7 @@ struct Chat
 		else {
 			while (!readFromDB.eof())
 			{
-				std::string array[5];
+				std::string array[3];
 				std::string msg;
 
 				std::getline(readFromDB, msg);
@@ -246,13 +238,11 @@ struct Chat
 					}
 					// showing messages linked with current users
 
-					if (array[3] == "_all" && _recipient == "_all") // showing messages linked with current chat
-						buffer.push_back("Public chat\tFrom: " + array[2] + "\tMessage: " + array[4]);
+					if (array[1] == "_all" && _recipient == "_all") // showing messages linked with current chat
+						buffer.push_back("Public chat\tFrom: " + array[0] + "\tMessage: " + array[2]);
 
-					else if (_recipient != "_all" && ((array[2] == _sender && array[3] == _recipient) || (array[2] == _recipient && array[3] == _sender)))
-						buffer.push_back("From: " + array[2] + "\tTo: " + array[3] + "\tMessage: " + array[4]);
-
-
+					else if (_recipient != "_all" && ((array[0] == _sender && array[1] == _recipient) || (array[1] == _recipient && array[0] == _sender)))
+						buffer.push_back("From: " + array[0] + "\tTo: " + array[1] + "\tMessage: " + array[2]);
 				}
 			}
 		}
@@ -265,6 +255,7 @@ struct Chat
 		}
 	}
 };
+
 void messageMenu(bool openChat, bool openSession, std::string current_user, std::string inputRecipient)
 {
 	while (openChat && openSession) {
