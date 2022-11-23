@@ -241,7 +241,7 @@ struct Chat
 					if (array[1] == "_all" && _recipient == "_all") // showing messages linked with current chat
 						buffer.push_back("Public chat\tFrom: " + array[0] + "\tMessage: " + array[2]);
 
-					else if (_recipient != "_all" && ((array[0] == _sender && array[1] == _recipient) || (array[1] == _recipient && array[0] == _sender)))
+					else if (_recipient != "_all" && ((array[0] == _sender && array[1] == _recipient) || (array[0] == _recipient && array[1] == _sender)))
 						buffer.push_back("From: " + array[0] + "\tTo: " + array[1] + "\tMessage: " + array[2]);
 				}
 			}
