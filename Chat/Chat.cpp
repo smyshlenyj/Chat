@@ -303,7 +303,7 @@ int main()
 	bool openSession = false;
 	bool openChat = false;
 	while (alive) {
-		std::cout << "\x1B[32mWelcome to Stack, past generation messenger!\033[0m\n\n";
+		std::cout << "Welcome to Stack, past generation messenger!\n\n";
 		std::cout << "\nPress\n '1' for sign in\n '2' for sign up\n 'q' for exit\n";
 		std::cin >> input;
 		switch (input) {
