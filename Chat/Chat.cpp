@@ -213,7 +213,7 @@ struct Chat
 {
 	std::list<std::string> buffer;
 
-	Chat(std::string _sender, std::string _recipient) // private chat constructor
+	Chat(std::string _sender, std::string _recipient) // universal chat constructor
 	{
 		std::ifstream readFromDB;
 		readFromDB.open("messages.mdf", std::ios::in);
