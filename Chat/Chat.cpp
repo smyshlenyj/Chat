@@ -2,7 +2,6 @@
 #include <fstream>
 #include <list>
 #include <sstream>
-#include <string>
 
 struct User
 {
@@ -126,7 +125,19 @@ User input()
 	User tempUser = { login, password };
 
 	std::cout << "Enter login: ";
-	std::cin >> login;
+	try
+	{
+
+		std::cin >> login;
+		if (login == "_all")
+			throw (login);
+	}
+
+	catch (std::string const& login)
+	{
+		std::cout << "Exception! Please don't use " + login + " as login, it is hardcoded!\n";
+	}
+
 	std::cout << '\n';
 	tempUser.setLogin(login);
 
@@ -153,11 +164,12 @@ User input()
 bool signUp()
 {
 	User user = input();
-	if (!loadedUsers.uniqueLogin(user.getLogin()))
-	{
-		std::cout << "Invalid Login.\n";
-		return false;
-	}
+
+		if (!loadedUsers.uniqueLogin(user.getLogin()))
+		{
+			std::cout << "Invalid Login.\n";
+			return false;
+		}
 
 	std::string name;
 	std::cout << "Enter your name: ";
@@ -192,9 +204,9 @@ bool signUp()
 User signIn() {
 	User user = input();
 
-	if (loadedUsers.uniqueLogin(user.getLogin())) // catch!!!!
-		std::cout << "Such user doesn't exist.\n";
-	else return user;
+		if (loadedUsers.uniqueLogin(user.getLogin()))
+			std::cout << "Such user doesn't exist.\n";
+		else return user;
 }
 
 ///////////////////////////////////////////////////////////
