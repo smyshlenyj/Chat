@@ -2,6 +2,7 @@
 #include <fstream>
 #include <list>
 #include <sstream>
+#include <string>
 
 struct User
 {
@@ -19,16 +20,16 @@ struct User
 	{
 	}
 
-	bool loginValid(std::string const& login)
+	bool loginValid(std::string const& _login)
 	{
 		for (auto i : login) if (i == '\t') return false;
-		if (login == "") return false;
+		if (_login == "" || _login == "_all") return false;
 		return true;
 	}
 
-	bool passwordValid(std::string const& password)
+	bool passwordValid(std::string const& _password)
 	{
-		if (password == "") return false;
+		if (_password == "") return false;
 		return true;
 	}
 
@@ -127,6 +128,7 @@ User input()
 	std::cout << "Enter login: ";
 	std::cin >> login;
 	std::cout << '\n';
+	tempUser.setLogin(login);
 
 	if (!tempUser.loginValid(login)) // ???????????????????????????
 	{
@@ -137,14 +139,14 @@ User input()
 	std::cout << "Enter password: ";
 	std::cin >> password;
 	std::cout << '\n';
+	tempUser.setPassword(password);
 
 	if (!tempUser.passwordValid(password)) // ?????????????????????????????
 	{
 		std::cout << "Invalid password.\n";
 		return User();
 	}
-	tempUser.setLogin(login);
-	tempUser.setPassword(password);
+
 	return tempUser;
 }
 
@@ -204,7 +206,7 @@ private:
 	std::string sender, recipient, message;
 
 public:
-	Message(std::string _sender, std::string _recipient, std::string _message) : sender(_sender), recipient(_recipient), message(_message)
+	Message(std::string const& _sender, std::string const& _recipient, std::string const& _message) : sender(_sender), recipient(_recipient), message(_message)
 	{
 	}
 
@@ -303,21 +305,21 @@ int main()
 	bool openSession = false;
 	bool openChat = false;
 	while (alive) {
-		std::cout << "Welcome to Stack, past generation messenger!\n\n";
+		std::cout << "\nWelcome to Stack, past generation messenger!\n\n";
 		std::cout << "\nPress\n '1' for sign in\n '2' for sign up\n 'q' for exit\n";
 		std::cin >> input;
 		switch (input) {
 		case '1': {
-			User current_user = signIn();
+			User currentUser = signIn();
 			openSession = true;
-			if (current_user.getLogin() == "")
+			if (currentUser.getLogin() == "")
 				openSession = false;
 
 			while (openSession) {
 				std::cout << "\nRegistered users:\n";
 				loadedUsers.printUsers();
 				std::cout << "\n";
-				std::cout << "Hi, " << current_user.getLogin() << ", please type recipient name or 'p' for public chat or 'q' to exit to main menu: ";
+				std::cout << "Hi, " << currentUser.getLogin() << ", please type recipient name or 'p' for public chat or 'q' to exit to main menu: ";
 				std::string inputRecipient;
 				std::cin >> inputRecipient;
 
@@ -330,14 +332,14 @@ int main()
 
 				if (inputRecipient == "p")
 				{
-					messageMenu(true, openSession, current_user.getLogin(), "_all");
+					messageMenu(true, openSession, currentUser.getLogin(), "_all");
 					continue;
 				}
 
 				else
 					openChat = true;
 
-				if (!loadedUsers.uniqueLogin(inputRecipient)) messageMenu(openChat, openSession, current_user.getLogin(), inputRecipient);
+				if (!loadedUsers.uniqueLogin(inputRecipient)) messageMenu(openChat, openSession, currentUser.getLogin(), inputRecipient);
 				else
 				{
 					openChat = false;
