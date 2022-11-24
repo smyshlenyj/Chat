@@ -22,21 +22,26 @@ special_map populate_users() {
 	else {
 		while (!readFromDB.eof())
 		{
-			std::getline(readFromDB, line);
-			if (line != "") {
-				for (auto i : line) {
-					if (i != '$') user.push_back(i);
-					else break;
+			std::string array[3];
+			std::string msg;
+
+			std::getline(readFromDB, msg);
+			if (!msg.empty())
+			{
+				std::istringstream ss(msg);
+				std::string token;
+				int i = 0; // iterator for while
+				while (std::getline(ss, token, '\t'))
+				{
+					array[i] = token;
+					++i;
 				}
-				for (auto i = 32; i < 64; i++) {
-					if (line[i] != '$') name.push_back(line[i]);
-					else break;
-				}
+				user = array[0];
+				name = array[2];
 				return_map.insert({ user, std::make_pair(name, counter_of_lines) });
 				user.clear();
 				name.clear();
 			}
-			++counter_of_lines;
 		}
 	}
 	return return_map;
@@ -138,10 +143,10 @@ std::string sign_in() {
 	std::pair<std::string, std::string> logpas = input();
 
 	auto it = g_users.find(logpas.first);
-	if (it == g_users.end()) {
-		std::cout << "Such user doesn't exist.\n";
-		return "";
-	}
+	//if (it == g_users.end()) {
+	//	std::cout << "Such user doesn't exist.\n";
+	//	return "";
+	//}
 
 	std::ifstream readFromDB;
 	readFromDB.open("users.mdf", std::ios::in);
@@ -149,6 +154,32 @@ std::string sign_in() {
 	std::string password = "";
 
 	int current_line = 0;
+	
+	while (!readFromDB.eof())
+	{
+		std::string array[3];
+		std::string msg;
+
+		std::getline(readFromDB, msg);
+		if (!msg.empty())
+		{
+			std::istringstream ss(msg);
+			std::string token;
+			int i = 0; // iterator for while
+			while (std::getline(ss, token, '\t'))
+			{
+				if ()
+				array[i] = token;
+				++i;
+			}
+			user = array[0];
+			name = array[2];
+			return_map.insert({ user, std::make_pair(name, counter_of_lines) });
+			user.clear();
+			name.clear();
+		}
+	}
+
 	while (!readFromDB.eof()) {
 		std::getline(readFromDB, line);
 		if (it->second.second == current_line) {
