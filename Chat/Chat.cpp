@@ -173,7 +173,8 @@ bool signUp()
 
 	std::string name;
 	std::cout << "Enter your name: ";
-	std::cin >> name;
+	std::cin.ignore();
+	std::getline(std::cin, name, '\n');
 	user.setUserName(name);
 	std::cout << '\n';
 
