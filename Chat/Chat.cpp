@@ -3,14 +3,24 @@
 #include <list>
 #include <sstream>
 
+// +++	Реализована основная задача приложения + 10 б
+// +++	Реализован дополнительный функционал + 3 б		хранение в файле
+// +++	Функциональность + 1 б
+// ?	Эффективность + 1 б
+// +++	Надежность + 1 б							предугадать ошибки. например проработана ситуация с \t
+// +++	Самодокументированный код + 1 б
+// +++	Командная работа + 1 б
+// -	Полнота информации в Readme или чекпоинты + 3 б	Золотых писал, он не ответил
+
 struct User
 {
+private:
 	std::string login, password, userName;
 
+public:
+	// struct constructors for different purposes:
 	User(std::string const& _login, std::string const& _password, std::string const& _userName) : login(_login), password(_password), userName(_userName) {}
-
 	User(std::string const& _login, std::string const& _password) : login(_login), password(_password) {}
-
 	User() {}
 
 	bool loginValid(std::string const& _login)
@@ -22,38 +32,26 @@ struct User
 
 	bool passwordValid(std::string const& _password)
 	{
-		if (_password == "" || _password.find('\t') != std::string::npos) return false;
+		if (_password == "" || _password.find('\t') != std::string::npos) return false; // '\t' is used as delimiter in data base
 
 		return true;
 	}
 
 	std::string getLogin() { return login; }
-
 	std::string getPassword() { return password; }
-
 	std::string getUserName() { return userName; }
 
-	void setLogin(std::string const& _login)
-	{
-		login = _login;
-	}
-
-	void setPassword(std::string const& _password)
-	{
-		password = _password;
-	}
-
-	void setUserName(std::string const& _userName)
-	{
-		userName = _userName;
-	}
-
+	void setLogin(std::string const& _login) { login = _login; }
+	void setPassword(std::string const& _password) { password = _password; }
+	void setUserName(std::string const& _userName) { userName = _userName; }
 };
 
 struct Users
 {
+private:
 	std::list<User> users;
 
+public:
 	Users()
 	{
 		std::ifstream readFromDB;
@@ -95,7 +93,7 @@ struct Users
 		return true;
 	}
 
-	void printUsers()
+	void printUsers() // 
 	{
 		for (auto i : users) {
 			std::cout << "User: " << i.getLogin() << ", Name: " << i.getUserName() << '\n';
@@ -103,7 +101,7 @@ struct Users
 	}
 };
 
-Users loadedUsers = Users();   // создать объект Users
+Users loadedUsers = Users();   // read database of users and put to Users object
 
 User input()
 {
@@ -126,22 +124,22 @@ User input()
 	std::cout << '\n';
 	tempUser.setLogin(login);
 
-	if (!tempUser.loginValid(login)) // ???????????????????????????
+	if (!tempUser.loginValid(login)) // check login is valid or not
 	{
 		std::cout << "Invalid Login.\n";
-		return User();
+		return User();	// return empty User in order to check it on next steps
 	}
 
 	std::cout << "Enter password: ";
 	std::cin.ignore();
-	std::getline(std::cin, password, '\n');
+	std::getline(std::cin, password, '\n'); // here and below getline is used to get string with spaces
 	std::cout << '\n';
 	tempUser.setPassword(password);
 
-	if (!tempUser.passwordValid(password)) // ?????????????????????????????
+	if (!tempUser.passwordValid(password)) // check password is valid or not
 	{
 		std::cout << "Invalid password.\n";
-		return User();
+		return User();	// return empty User in order to check it on next steps
 	}
 
 	return tempUser;
@@ -151,13 +149,11 @@ bool signUp()
 {
 	User user = input();
 
-		if (!loadedUsers.uniqueLogin(user.getLogin()))
-		{
-			std::cout << "Invalid Login.\n";
-			return false;
-		}
-
-		if (user.getLogin() == "") return false;
+	if (!loadedUsers.uniqueLogin(user.getLogin()) || user.getLogin() == "") // if login is empty or user with inputed login is already in database, return false
+	{
+		std::cout << "Invalid Login.\n";
+		return false;
+	}
 
 	std::string name;
 	std::cout << "Enter your name: ";
@@ -169,21 +165,23 @@ bool signUp()
 	std::cout << "Check your entries.\nYour login: " << user.getLogin()
 		<< "\nYour password: " << user.getPassword()
 		<< "\nYour name: " << user.getUserName()
-		<< "\nare those correct? Enter 'y' to proceed, 'q' to abort\n";
+		<< "\nare those correct? Enter 'y' to proceed, any other button to abort: ";
 	std::string input;
 	std::cin >> input;
-	if (input != "y") {
+	if (input != "y") 
+	{
 		std::cout << "Operation cancelled\n";
 		return false;
 	}
 
-	std::ofstream out("users.mdf", std::ios::app);
-
-	if (out.is_open()) {
+	std::ofstream out("users.mdf", std::ios::app); // add user record to data base
+	if (out.is_open()) 
+	{
 		out << user.getLogin() + "\t" + user.getPassword() + "\t" + user.getUserName() << std::endl;  //add new user to file
 		std::cout << "Success! You are registered.\n";
 		return true;
 	}
+
 	else {
 		std::cout << "Something went wrong.\n";
 		return false;
@@ -193,9 +191,9 @@ bool signUp()
 User signIn() {
 	User user = input();
 
-		if (loadedUsers.uniqueLogin(user.getLogin()))
-			std::cout << "Such user doesn't exist.\n";
-		else return user;
+	if (loadedUsers.uniqueLogin(user.getLogin()))
+		std::cout << "Such user doesn't exist.\n";
+	else return user;
 }
 
 ///////////////////////////////////////////////////////////
@@ -207,9 +205,7 @@ private:
 	std::string sender, recipient, message;
 
 public:
-	Message(std::string const& _sender, std::string const& _recipient, std::string const& _message) : sender(_sender), recipient(_recipient), message(_message)
-	{
-	}
+	Message(std::string const& _sender, std::string const& _recipient, std::string const& _message) : sender(_sender), recipient(_recipient), message(_message) {}
 
 	void sendMessage() // push message to data base
 	{
@@ -224,8 +220,10 @@ public:
 
 struct Chat
 {
+private:
 	std::list<std::string> buffer;
 
+public:
 	Chat(std::string const& _sender, std::string const& _recipient) // universal chat constructor
 	{
 		std::ifstream readFromDB;
@@ -261,7 +259,7 @@ struct Chat
 		}
 	}
 
-	void printChat()
+	void printChat() // just prints all messages in Chat object
 	{
 		for (auto const& i : buffer) {
 			std::cout << i << std::endl;
@@ -269,7 +267,7 @@ struct Chat
 	}
 };
 
-void messageMenu(bool openChat, bool openSession, std::string current_user, std::string inputRecipient)
+void messageMenu(bool openChat, bool openSession, std::string const& current_user, std::string const& inputRecipient)
 {
 	while (openChat && openSession) {
 		std::cout << '\n' << "Last messages in chat: \n";
