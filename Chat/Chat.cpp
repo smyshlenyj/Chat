@@ -7,17 +7,11 @@ struct User
 {
 	std::string login, password, userName;
 
-	User(std::string const& _login, std::string const& _password, std::string const& _userName) : login(_login), password(_password), userName(_userName)
-	{
-	}
+	User(std::string const& _login, std::string const& _password, std::string const& _userName) : login(_login), password(_password), userName(_userName) {}
 
-	User(std::string const& _login, std::string const& _password) : login(_login), password(_password)
-	{
-	}
+	User(std::string const& _login, std::string const& _password) : login(_login), password(_password) {}
 
-	User()
-	{
-	}
+	User() {}
 
 	bool loginValid(std::string const& _login)
 	{
@@ -28,24 +22,16 @@ struct User
 
 	bool passwordValid(std::string const& _password)
 	{
-		if (_password == "") return false;
+		if (_password == "" || _password.find('\t') != std::string::npos) return false;
+
 		return true;
 	}
 
-	std::string getLogin()
-	{
-		return login;
-	}
+	std::string getLogin() { return login; }
 
-	std::string getPassword()
-	{
-		return password;
-	}
+	std::string getPassword() { return password; }
 
-	std::string getUserName()
-	{
-		return userName;
-	}
+	std::string getUserName() { return userName; }
 
 	void setLogin(std::string const& _login)
 	{
@@ -127,7 +113,6 @@ User input()
 	std::cout << "Enter login: ";
 	try
 	{
-
 		std::cin >> login;
 		if (login == "_all")
 			throw (login);
@@ -148,7 +133,8 @@ User input()
 	}
 
 	std::cout << "Enter password: ";
-	std::cin >> password;
+	std::cin.ignore();
+	std::getline(std::cin, password, '\n');
 	std::cout << '\n';
 	tempUser.setPassword(password);
 
@@ -171,6 +157,8 @@ bool signUp()
 			return false;
 		}
 
+		if (user.getLogin() == "") return false;
+
 	std::string name;
 	std::cout << "Enter your name: ";
 	std::cin.ignore();
@@ -185,7 +173,7 @@ bool signUp()
 	std::string input;
 	std::cin >> input;
 	if (input != "y") {
-		std::cout << "aborted\n";
+		std::cout << "Operation cancelled\n";
 		return false;
 	}
 
@@ -298,10 +286,7 @@ void messageMenu(bool openChat, bool openSession, std::string current_user, std:
 		std::cin >> messageMenuChoice;
 		switch (messageMenuChoice)
 		{
-		case '1':
-		{
-			continue;
-		};
+		case '1': { continue; };
 		case 'q':
 		{
 			openChat = false;
