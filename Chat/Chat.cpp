@@ -93,7 +93,7 @@ public:
 		return true;
 	}
 
-	void printUsers() // 
+	void printUsers() // just prints all user names and logins
 	{
 		for (auto i : users) {
 			std::cout << "User: " << i.getLogin() << ", Name: " << i.getUserName() << '\n';
