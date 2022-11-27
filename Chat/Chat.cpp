@@ -16,16 +16,16 @@ public:
 	User(std::string const& _login, std::string const& _password) : login(_login), password(_password) {}
 	User() {}
 
-	bool loginValid(std::string const& _login)
+	bool loginValid()
 	{
-		for (auto i : login) if (i == '\t') return false;
-		if (_login == "" || _login == "_all") return false;
+		// '\t' is used as delimiter in DB, _all is used as public chat id
+		if (login == "" || login == "_all" || login.find(' ') != std::string::npos || login.find('\t') != std::string::npos) return false;
 		return true;
 	}
 
 	bool passwordValid(std::string const& _password)
 	{
-		if (_password == "" || _password.find('\t') != std::string::npos) return false; // '\t' is used as delimiter in data base
+		if (_password == "" || _password.find('\t') != std::string::npos) return false; // '\t' is used as delimiter in database
 
 		return true;
 	}
@@ -39,7 +39,7 @@ public:
 	void setUserName(std::string const& _userName) { userName = _userName; }
 };
 
-struct Users
+struct Users   // read and store all user records
 {
 private:
 	std::vector<User> users;
@@ -76,7 +76,7 @@ public:
 		}
 	}
 
-	bool uniqueLogin(std::string const& login)
+	bool uniqueLogin(std::string const& login) // check login for uniqueness
 	{
 		for (auto& i : users)
 		{
@@ -88,31 +88,17 @@ public:
 
 	void printUsers() // just prints all user names and logins
 	{
-		for (auto i : users) {
+		for (auto i : users)
 			std::cout << "User: " << i.getLogin() << ", Name: " << i.getUserName() << '\n';
-		}
 	}
 
-	bool login_password_accordance (std::string const& login, std::string const& _password) {
-		std::ifstream readFromDB;
-		readFromDB.open("users.mdf", std::ios::in);
-
-		std::string line, user, password;
-		if (readFromDB.is_open())
-			while (!readFromDB.eof())
-			{
-				std::getline(readFromDB, line);
-				int i = 0;
-				while (line[i] != '\t') { user.push_back(line[i]); ++i; }
-				if (user == login)
-				{
-					++i; //skip \t
-					while (line[i] != '\t') { password.push_back(line[i]); ++i; }
-					if (password == password) return true;
-					else return false;
-				}
-				user.clear();
-			}
+	bool loginAndPasswordMatch(User const& _user) // check is login matching the password
+	{
+		for (auto& i : users)
+		{
+			if (i.getLogin() == _user.getLogin() && i.getPassword() == _user.getPassword())
+				return true;
+		}
 		return false;
 	}
 };
@@ -125,8 +111,8 @@ User input()
 	User tempUser;
 
 	std::cout << "Enter login: ";
-	try
-	{ 
+	try // just because we can and it is in task
+	{
 		std::cin >> login;
 		if (login == "_all")
 			throw (login);
@@ -140,7 +126,7 @@ User input()
 	std::cout << '\n';
 	tempUser.setLogin(login);
 
-	if (!tempUser.loginValid(login)) // check login is valid or not
+	if (!tempUser.loginValid()) // check login is valid or not
 	{
 		std::cout << "Invalid Login.\n";
 		return User();	// return empty User in order to check it on next steps
@@ -157,7 +143,6 @@ User input()
 		std::cout << "Invalid password.\n";
 		return User();	// return empty User in order to check it on next steps
 	}
-
 	return tempUser;
 }
 
@@ -183,21 +168,22 @@ bool signUp()
 		<< "\nare those correct? Enter 'y' to proceed, any other button to abort: ";
 	std::string input;
 	std::cin >> input;
-	if (input != "y") 
+	if (input != "y")
 	{
 		std::cout << "Operation cancelled\n";
 		return false;
 	}
 
 	std::ofstream out("users.mdf", std::ios::app); // add user record to data base
-	if (out.is_open()) 
+	if (out.is_open())
 	{
 		out << user.getLogin() + "\t" + user.getPassword() + "\t" + user.getUserName() << std::endl;  //add new user to file
 		std::cout << "Success! You are registered.\n";
 		return true;
 	}
 
-	else {
+	else
+	{
 		std::cout << "Something went wrong.\n";
 		return false;
 	}
@@ -207,13 +193,13 @@ User signIn() {
 	User user = input();
 
 	if (g_loadedUsers.uniqueLogin(user.getLogin()))
-	{		
+	{
 		std::cout << "Such user doesn't exist.\n";
 		user.setLogin("");
 		return user;
 	}
 
-	if (!g_loadedUsers.login_password_accordance(user.getLogin(), user.getPassword()))
+	if (!g_loadedUsers.loginAndPasswordMatch(user))
 	{
 		std::cout << "Invalid password.\n";
 		user.setLogin("");
@@ -221,9 +207,6 @@ User signIn() {
 
 	return user;
 }
-
-///////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////
 
 struct Message
 {
@@ -293,7 +276,7 @@ public:
 	}
 };
 
-void messageMenu(bool openChat, bool openSession, std::string const& current_user, std::string const& inputRecipient)
+void messageMenu(bool openChat, bool openSession, std::string const& current_user, std::string const& inputRecipient) // part of UI logic
 {
 	while (openChat && openSession) {
 		std::cout << '\n' << "Last messages in chat: \n";
@@ -321,7 +304,7 @@ void messageMenu(bool openChat, bool openSession, std::string const& current_use
 }
 
 int main()
-{
+{					// UI:
 	char input;
 	bool alive = true;
 	bool openSession = false;
@@ -384,4 +367,4 @@ int main()
 		}
 		}
 	}
-}
+} 
