@@ -1,7 +1,10 @@
 #include <iostream>
 #include <fstream>
+#include <iterator>
 #include <list>
 #include <sstream>
+#include <algorithm>
+#include <string>
 
 // +++	Реализована основная задача приложения + 10 б
 // +++	Реализован дополнительный функционал + 3 б		хранение в файле
@@ -37,9 +40,9 @@ public:
 		return true;
 	}
 
-	std::string getLogin() { return login; }
-	std::string getPassword() { return password; }
-	std::string getUserName() { return userName; }
+	std::string getLogin()    const noexcept { return login; }
+	std::string getPassword() const noexcept { return password; }
+	std::string getUserName() const noexcept { return userName; }
 
 	void setLogin(std::string const& _login) { login = _login; }
 	void setPassword(std::string const& _password) { password = _password; }
@@ -99,6 +102,31 @@ public:
 			std::cout << "User: " << i.getLogin() << ", Name: " << i.getUserName() << '\n';
 		}
 	}
+
+	bool login_password_accordance (std::string const& login, std::string const& password) {
+		std::ifstream readFromDB;
+		readFromDB.open("users.mdf", std::ios::in);
+
+		std::string line;
+		std::string user;
+		std::string passw;
+		if (readFromDB.is_open())
+			while (!readFromDB.eof())
+			{
+				std::getline(readFromDB, line);
+				int i = 0;
+				while (line[i] != '\t') { user.push_back(line[i]); ++i; }
+				if (user == login)
+				{
+					++i; //skip \t
+					while (line[i] != '\t') { passw.push_back(line[i]); ++i; }
+					if (passw == password) return true;
+					else return false;
+				}
+				user.clear();
+			}
+		return false;
+	}
 };
 
 Users loadedUsers = Users();   // read database of users and put to Users object
@@ -106,11 +134,11 @@ Users loadedUsers = Users();   // read database of users and put to Users object
 User input()
 {
 	std::string login, password;
-	User tempUser = { login, password };
+	User tempUser;
 
 	std::cout << "Enter login: ";
 	try
-	{
+	{ 
 		std::cin >> login;
 		if (login == "_all")
 			throw (login);
@@ -192,8 +220,19 @@ User signIn() {
 	User user = input();
 
 	if (loadedUsers.uniqueLogin(user.getLogin()))
+	{		
 		std::cout << "Such user doesn't exist.\n";
-	else return user;
+		user.setLogin("");
+		return user;
+	}
+
+	if (!loadedUsers.login_password_accordance(user.getLogin(), user.getPassword()))
+	{
+		std::cout << "Invalid password.\n";
+		user.setLogin("");
+	}
+
+	return user;
 }
 
 ///////////////////////////////////////////////////////////
@@ -300,13 +339,14 @@ int main()
 	bool alive = true;
 	bool openSession = false;
 	bool openChat = false;
+	std::cout << "\nWelcome to Stack, past generation messenger!\n\n";
 	while (alive) {
-		std::cout << "\nWelcome to Stack, past generation messenger!\n\n";
 		std::cout << "\nPress\n '1' for sign in\n '2' for sign up\n 'q' for exit\n";
 		std::cin >> input;
 		switch (input) {
 		case '1': {
 			User currentUser = signIn();
+			if (currentUser.getLogin() == "") break;
 			openSession = true;
 			if (currentUser.getLogin() == "")
 				openSession = false;
