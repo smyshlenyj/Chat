@@ -2,8 +2,9 @@
 #include <fstream>
 #include <iterator>
 #include <list>
+#include <vector>
 #include <sstream>
-#include <algorithm>
+// #include <algorithm>
 #include <string>
 
 // +++	Реализована основная задача приложения + 10 б
@@ -52,7 +53,7 @@ public:
 struct Users
 {
 private:
-	std::list<User> users;
+	std::vector<User> users;
 
 public:
 	Users()
@@ -129,7 +130,7 @@ public:
 	}
 };
 
-Users loadedUsers = Users();   // read database of users and put to Users object
+Users g_loadedUsers = Users();   // read database of users and put to Users object
 
 User input()
 {
@@ -177,7 +178,7 @@ bool signUp()
 {
 	User user = input();
 
-	if (!loadedUsers.uniqueLogin(user.getLogin()) || user.getLogin() == "") // if login is empty or user with inputed login is already in database, return false
+	if (!g_loadedUsers.uniqueLogin(user.getLogin()) || user.getLogin() == "") // if login is empty or user with inputed login is already in database, return false
 	{
 		std::cout << "Invalid Login.\n";
 		return false;
@@ -218,14 +219,14 @@ bool signUp()
 User signIn() {
 	User user = input();
 
-	if (loadedUsers.uniqueLogin(user.getLogin()))
+	if (g_loadedUsers.uniqueLogin(user.getLogin()))
 	{		
 		std::cout << "Such user doesn't exist.\n";
 		user.setLogin("");
 		return user;
 	}
 
-	if (!loadedUsers.login_password_accordance(user.getLogin(), user.getPassword()))
+	if (!g_loadedUsers.login_password_accordance(user.getLogin(), user.getPassword()))
 	{
 		std::cout << "Invalid password.\n";
 		user.setLogin("");
@@ -352,7 +353,7 @@ int main()
 
 			while (openSession) {
 				std::cout << "\nRegistered users:\n";
-				loadedUsers.printUsers();
+				g_loadedUsers.printUsers();
 				std::cout << "\n";
 				std::cout << "Hi, " << currentUser.getLogin() << ", please type recipient name or 'p' for public chat or 'q' to exit to main menu: ";
 				std::string inputRecipient;
@@ -374,7 +375,7 @@ int main()
 				else
 					openChat = true;
 
-				if (!loadedUsers.uniqueLogin(inputRecipient)) messageMenu(openChat, openSession, currentUser.getLogin(), inputRecipient);
+				if (!g_loadedUsers.uniqueLogin(inputRecipient)) messageMenu(openChat, openSession, currentUser.getLogin(), inputRecipient);
 				else
 				{
 					openChat = false;
@@ -384,7 +385,7 @@ int main()
 		}; break;
 		case '2': { if (signUp())
 		{
-			loadedUsers = Users();
+			g_loadedUsers = Users();
 			break;
 		}; break;
 		case 'q':
