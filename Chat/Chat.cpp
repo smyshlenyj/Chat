@@ -355,7 +355,7 @@ int main()
 		}; break;
 		case '2': { if (signUp())
 		{
-			g_loadedUsers = Users();
+			g_loadedUsers = Users(); // update users after registration
 			break;
 		}; break;
 		case 'q':
