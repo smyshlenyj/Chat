@@ -4,7 +4,6 @@
 #include <list>
 #include <vector>
 #include <sstream>
-// #include <algorithm>
 #include <string>
 
 // +++	Реализована основная задача приложения + 10 б
