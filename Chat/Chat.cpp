@@ -1,192 +1,212 @@
 #include <iostream>
 #include <fstream>
 #include <list>
+#include <vector>
 #include <sstream>
-#include <unordered_map>
-#include <algorithm>
+#include <string>
 
-typedef std::unordered_map<std::string, std::pair<std::string, int>> special_map;
+struct User
+{
+private:
+	std::string login, password, userName;
 
-special_map populate_users() {
-	special_map return_map;
-	int counter_of_lines = 0;
-	std::string line;
-	std::string user;
-	std::string name;
+public:
+	// struct constructors for different purposes:
+	User(std::string const& _login, std::string const& _password, std::string const& _userName) : login(_login), password(_password), userName(_userName) {}
+	User(std::string const& _login, std::string const& _password) : login(_login), password(_password) {}
+	User() {}
 
-	std::ifstream readFromDB;
-	readFromDB.open("users.mdf", std::ios::in);
+	bool loginValid()
+	{
+		// '\t' is used as delimiter in DB, _all is used as public chat id
+		if (login == "" || login == "_all" || login.find(' ') != std::string::npos || login.find('\t') != std::string::npos) return false;
+		return true;
+	}
 
-	if (!readFromDB.is_open())
-		std::ofstream outfile("users.mdf"); //create file in case it's not there
-	else {
-		while (!readFromDB.eof())
+	bool passwordValid(std::string const& _password)
+	{
+		if (_password == "" || _password.find('\t') != std::string::npos) return false; // '\t' is used as delimiter in database
+
+		return true;
+	}
+
+	std::string getLogin()    const noexcept { return login; }
+	std::string getPassword() const noexcept { return password; }
+	std::string getUserName() const noexcept { return userName; }
+
+	void setLogin(std::string const& _login) { login = _login; }
+	void setPassword(std::string const& _password) { password = _password; }
+	void setUserName(std::string const& _userName) { userName = _userName; }
+};
+
+struct Users   // read and store all user records
+{
+private:
+	std::vector<User> users;
+
+public:
+	Users()
+	{
+		std::ifstream readFromDB;
+		readFromDB.open("users.mdf", std::ios::in);
+		if (!readFromDB.is_open())
+			std::ofstream outfile("users.mdf"); //create file in case it's not there
+		else
 		{
-			std::getline(readFromDB, line);
-			if (line != "") {
-				for (auto i : line) {
-					if (i != '$') user.push_back(i);
-					else break;
+			while (!readFromDB.eof())
+			{
+				std::string array[3];
+				std::string userRecord;
+
+				std::getline(readFromDB, userRecord);
+				if (!userRecord.empty())
+				{
+					std::istringstream ss(userRecord);
+					std::string token;
+					int i = 0; // iterator for while
+					while (std::getline(ss, token, '\t'))
+					{
+						array[i] = token;
+						++i;
+					}
+					User tempUser = { array[0], array[1], array[2] };
+					users.push_back(tempUser);
 				}
-				for (auto i = 32; i < 64; i++) {
-					if (line[i] != '$') name.push_back(line[i]);
-					else break;
-				}
-				return_map.insert({ user, std::make_pair(name, counter_of_lines) });
-				user.clear();
-				name.clear();
 			}
-			++counter_of_lines;
 		}
 	}
-	return return_map;
-}
 
-special_map g_users = populate_users();
+	bool uniqueLogin(std::string const& login) // check login for uniqueness
+	{
+		for (auto& i : users)
+		{
+			if (i.getLogin() == login)
+				return false;
+		}
+		return true;
+	}
 
+	void printUsers() // just prints all user names and logins
+	{
+		for (auto i : users)
+			std::cout << "User: " << i.getLogin() << ", Name: " << i.getUserName() << '\n';
+	}
 
-bool is_valid_login(std::string login)
+	bool loginAndPasswordMatch(User const& _user) // check is login matching the password
+	{
+		for (auto& i : users)
+		{
+			if (i.getLogin() == _user.getLogin() && i.getPassword() == _user.getPassword())
+				return true;
+		}
+		return false;
+	}
+};
+
+Users g_loadedUsers = Users();   // read database of users and put to Users object
+
+User input()
 {
-	for (auto i : login) if (i == '$') return false;
-	if (login == "") return false;
-	return true;
-}
-
-bool is_valid_password(std::string password)
-{
-	// for (auto i : password) if (i == '$') return false;
-	if (password == "") return false;
-	return true;
-}
-
-bool is_unique_login(std::string login)
-{
-	auto it = g_users.find(login);
-	if (it != g_users.end()) return false;
-	return true;
-}
-
-std::pair<std::string, std::string> input() {
 	std::string login, password;
+	User tempUser;
 
+	std::cout << "Enter login: ";
+	try // just because we can and it is in task
 	{
-		std::cout << "Enter login: ";
-		std::cin >> login;
-		std::cout << '\n';
-
-		if (!is_valid_login(login)) {
-			std::cout << "Invalid Login.\n";
-			return { "", "" };
-		}
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		std::getline(std::cin, login, '\n');
+		if (login == "_all")
+			throw (login);
 	}
 
+	catch (std::string const& login)
 	{
-		std::cout << "Enter password: ";
-		std::cin >> password;
-		std::cout << '\n';
-
-		if (!is_valid_password(password)) {
-			std::cout << "Invalid password.\n";
-			return { "", "" };
-		}
+		std::cout << "Exception! Please don't use " + login + " as login, it is hardcoded!\n";
 	}
 
-	return { login, password };
+	std::cout << '\n';
+	tempUser.setLogin(login);
+
+	if (!tempUser.loginValid()) // check login is valid or not
+	{
+		std::cout << "Invalid Login.\n";
+		return User();	// return empty User in order to check it on next steps
+	}
+
+	std::cout << "Enter password: ";
+	std::getline(std::cin, password, '\n'); // here and below getline is used to get string with spaces
+	std::cout << '\n';
+	tempUser.setPassword(password);
+
+	if (!tempUser.passwordValid(password)) // check password is valid or not
+	{
+		std::cout << "Invalid password.\n";
+		return User();	// return empty User in order to check it on next steps
+	}
+	return tempUser;
 }
 
-bool sign_up() {
-	std::pair<std::string, std::string> logpas = input();
-	if (!is_unique_login(logpas.first)) {
+bool signUp()
+{
+	User user = input();
+
+	if (!g_loadedUsers.uniqueLogin(user.getLogin()) || user.getLogin() == "") // if login is empty or user with inputed login is already in database, return false
+	{
 		std::cout << "Invalid Login.\n";
 		return false;
 	}
 
 	std::string name;
 	std::cout << "Enter your name: ";
-	std::cin >> name;
+	std::getline(std::cin, name, '\n');
+	user.setUserName(name);
 	std::cout << '\n';
 
-	std::cout << "Check your entries.\nYour login: " << logpas.first
-		<< "\nYour password: " << logpas.second
-		<< "\nYour name: " << name
-		<< "\nare those correct? Enter 'y' to proceed, 'q' to abort\n";
-	std::string inputt;
-	std::cin >> inputt;
-	if (inputt != "y") {
-		std::cout << "aborted\n";
+	std::cout << "Check your entries.\nYour login: " << user.getLogin()
+		<< "\nYour password: " << user.getPassword()
+		<< "\nYour name: " << user.getUserName()
+		<< "\nare those correct? Enter 'y' to proceed, any other button to abort: ";
+	std::string input;
+	std::cin >> input;
+	if (input != "y")
+	{
+		std::cout << "Operation cancelled\n";
 		return false;
 	}
 
-	std::ofstream out("users.mdf", std::ios::app);
-
-	if (out.is_open()) {
-		out << logpas.first;  //add new user to file
-		for (auto i = logpas.first.size(); i < 32; i++) out << '$';
-		out << name;
-		for (auto i = 32 + name.size(); i < 64; i++) out << '$';
-		out << logpas.second << '\n';
+	std::ofstream out("users.mdf", std::ios::app); // add user record to data base
+	if (out.is_open())
+	{
+		out << user.getLogin() + "\t" + user.getPassword() + "\t" + user.getUserName() << std::endl;  //add new user to file
 		std::cout << "Success! You are registered.\n";
 		return true;
 	}
-	else {
+
+	else
+	{
 		std::cout << "Something went wrong.\n";
 		return false;
 	}
 }
 
-std::string sign_in() {
-	std::pair<std::string, std::string> logpas = input();
+User signIn() {
+	User user = input();
 
-	auto it = g_users.find(logpas.first);
-	if (it == g_users.end()) {
+	if (g_loadedUsers.uniqueLogin(user.getLogin()))
+	{
 		std::cout << "Such user doesn't exist.\n";
-		return "";
+		user.setLogin("");
+		return user;
 	}
 
-	std::ifstream readFromDB;
-	readFromDB.open("users.mdf", std::ios::in);
-	std::string line;
-	std::string password = "";
-
-	int current_line = 0;
-	while (!readFromDB.eof()) {
-		std::getline(readFromDB, line);
-		if (it->second.second == current_line) {
-			for (auto i = 64; i < line.size(); ++i) {
-				if (line[i] != '$') {
-					password.push_back(line[i]);
-				}
-				else {
-					break;
-				}
-			}
-			break;
-		}
-		current_line++;
+	if (!g_loadedUsers.loginAndPasswordMatch(user))
+	{
+		std::cout << "Invalid password.\n";
+		user.setLogin("");
 	}
 
-	if (password != logpas.second) {
-		std::cout << "Incorrect password.\n";
-		return "";
-	}
-
-	return logpas.first;
+	return user;
 }
-
-std::string get_name(std::string login) {
-	auto it = g_users.find(login);
-	if (it != g_users.end()) return it->second.first;
-	else                     return "";
-}
-
-void list_users() {
-	for (auto i : g_users) {
-		std::cout << "User: " << i.first << ", Name: " << i.second.first << '\n';
-	}
-}
-
-///////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////
 
 struct Message
 {
@@ -194,9 +214,7 @@ private:
 	std::string sender, recipient, message;
 
 public:
-	Message(std::string _sender, std::string _recipient, std::string _message) : sender(_sender), recipient(_recipient), message(_message)
-	{
-	}
+	Message(std::string const& _sender, std::string const& _recipient, std::string const& _message) : sender(_sender), recipient(_recipient), message(_message) {}
 
 	void sendMessage() // push message to data base
 	{
@@ -211,9 +229,11 @@ public:
 
 struct Chat
 {
+private:
 	std::list<std::string> buffer;
 
-	Chat(std::string _sender, std::string _recipient) // universal chat constructor
+public:
+	Chat(std::string const& _sender, std::string const& _recipient) // universal chat constructor
 	{
 		std::ifstream readFromDB;
 		readFromDB.open("messages.mdf", std::ios::in);
@@ -248,7 +268,7 @@ struct Chat
 		}
 	}
 
-	void printChat()
+	void printChat() // just prints all messages in Chat object
 	{
 		for (auto const& i : buffer) {
 			std::cout << i << std::endl;
@@ -256,7 +276,7 @@ struct Chat
 	}
 };
 
-void messageMenu(bool openChat, bool openSession, std::string current_user, std::string inputRecipient)
+void messageMenu(bool openChat, bool openSession, std::string const& current_user, std::string const& inputRecipient) // part of UI logic
 {
 	while (openChat && openSession) {
 		std::cout << '\n' << "Last messages in chat: \n";
@@ -273,10 +293,7 @@ void messageMenu(bool openChat, bool openSession, std::string current_user, std:
 		std::cin >> messageMenuChoice;
 		switch (messageMenuChoice)
 		{
-		case '1':
-		{
-			continue;
-		};
+		case '1': { continue; };
 		case 'q':
 		{
 			openChat = false;
@@ -287,28 +304,28 @@ void messageMenu(bool openChat, bool openSession, std::string current_user, std:
 }
 
 int main()
-{
+{					// UI:
 	char input;
-	std::string current_user;
 	bool alive = true;
 	bool openSession = false;
 	bool openChat = false;
+	std::cout << "\nWelcome to Stack, past generation messenger!\n\n";
 	while (alive) {
-		std::cout << "Welcome to Stack, past generation messenger!\n\n";
 		std::cout << "\nPress\n '1' for sign in\n '2' for sign up\n 'q' for exit\n";
 		std::cin >> input;
 		switch (input) {
 		case '1': {
-			current_user = sign_in();
+			User currentUser = signIn();
+			if (currentUser.getLogin() == "") break;
 			openSession = true;
-			if (current_user == "")
+			if (currentUser.getLogin() == "")
 				openSession = false;
 
 			while (openSession) {
 				std::cout << "\nRegistered users:\n";
-				list_users();
+				g_loadedUsers.printUsers();
 				std::cout << "\n";
-				std::cout << "Hi, " << current_user << ", please type recipient name or 'p' for public chat or 'q' to exit to main menu: ";
+				std::cout << "Hi, " << currentUser.getLogin() << ", please type recipient name or 'p' for public chat or 'q' to exit to main menu: ";
 				std::string inputRecipient;
 				std::cin >> inputRecipient;
 
@@ -321,31 +338,24 @@ int main()
 
 				if (inputRecipient == "p")
 				{
-					messageMenu(true, openSession, current_user, "_all");
+					messageMenu(true, openSession, currentUser.getLogin(), "_all");
 					continue;
 				}
 
 				else
-				openChat = false;
-				bool recipientExists = false;
-				for (auto i : g_users)
+					openChat = true;
+
+				if (!g_loadedUsers.uniqueLogin(inputRecipient)) messageMenu(openChat, openSession, currentUser.getLogin(), inputRecipient);
+				else
 				{
-					if (i.first == inputRecipient)
-					{
-						openChat = true;
-						recipientExists = true;
-						break;
-					}
+					openChat = false;
+					std::cout << "User " << inputRecipient << " not found, please try again \n";
 				}
-
-				if (recipientExists) messageMenu(openChat, openSession, current_user, inputRecipient);
-				else std::cout << "User " << inputRecipient << " not found, please try again \n";
-
 			}
 		}; break;
-		case '2': { if (sign_up())
+		case '2': { if (signUp())
 		{
-			g_users = populate_users();
+			g_loadedUsers = Users();
 			break;
 		}; break;
 		case 'q':
