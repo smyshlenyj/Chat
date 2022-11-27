@@ -113,7 +113,8 @@ User input()
 	std::cout << "Enter login: ";
 	try // just because we can and it is in task
 	{
-		std::cin >> login;
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		std::getline(std::cin, login, '\n');
 		if (login == "_all")
 			throw (login);
 	}
@@ -133,7 +134,6 @@ User input()
 	}
 
 	std::cout << "Enter password: ";
-	std::cin.ignore();
 	std::getline(std::cin, password, '\n'); // here and below getline is used to get string with spaces
 	std::cout << '\n';
 	tempUser.setPassword(password);
@@ -367,4 +367,4 @@ int main()
 		}
 		}
 	}
-} 
+}
