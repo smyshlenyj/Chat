@@ -1,6 +1,5 @@
 #include <iostream>
 #include <fstream>
-#include <iterator>
 #include <list>
 #include <vector>
 #include <sstream>
@@ -103,13 +102,11 @@ public:
 		}
 	}
 
-	bool login_password_accordance (std::string const& login, std::string const& password) {
+	bool login_password_accordance (std::string const& login, std::string const& _password) {
 		std::ifstream readFromDB;
 		readFromDB.open("users.mdf", std::ios::in);
 
-		std::string line;
-		std::string user;
-		std::string passw;
+		std::string line, user, password;
 		if (readFromDB.is_open())
 			while (!readFromDB.eof())
 			{
@@ -119,8 +116,8 @@ public:
 				if (user == login)
 				{
 					++i; //skip \t
-					while (line[i] != '\t') { passw.push_back(line[i]); ++i; }
-					if (passw == password) return true;
+					while (line[i] != '\t') { password.push_back(line[i]); ++i; }
+					if (password == password) return true;
 					else return false;
 				}
 				user.clear();
